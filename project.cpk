@@ -1,0 +1,9 @@
+{
+    "description": "Adaptive Networking for the Slocum project at WHOI",
+    "maintainer": "Woods Hole Oceanographic Institution",
+    "name": "whoi-slocum-adaptive-networking",
+    "organization": "whoi",
+    "schema": "1.0",
+    "template": null,
+    "version": "0.0.0"
+}
