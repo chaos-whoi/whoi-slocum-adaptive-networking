@@ -1,0 +1,40 @@
+version: "2.4"
+services:
+
+    tc00: &tc0
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: tc-on-ppp
+            DEVICE: ppp0
+            BANDWIDTH: ${CONNECTION_0_POINT_0_BW:-10gbps}
+            LATENCY: ${CONNECTION_0_POINT_0_LT:-0ms}
+        privileged: true
+        network_mode: container:ppp00
+
+    tc01:
+        <<: *tc0
+        environment:
+            CPK_LAUNCHER: tc-on-ppp
+            DEVICE: ppp0
+            BANDWIDTH: ${CONNECTION_0_POINT_1_BW:-10gbps}
+            LATENCY: ${CONNECTION_0_POINT_1_LT:-0ms}
+        network_mode: container:ppp01
+
+    tc10: &tc1
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: tc-on-ppp
+            DEVICE: ppp0
+            BANDWIDTH: ${CONNECTION_1_POINT_0_BW:-10gbps}
+            LATENCY: ${CONNECTION_1_POINT_0_LT:-0ms}
+        privileged: true
+        network_mode: container:ppp10
+
+    tc11:
+        <<: *tc1
+        environment:
+            CPK_LAUNCHER: tc-on-ppp
+            DEVICE: ppp0
+            BANDWIDTH: ${CONNECTION_1_POINT_1_BW:-10gbps}
+            LATENCY: ${CONNECTION_1_POINT_1_LT:-0ms}
+        network_mode: container:ppp11

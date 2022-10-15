@@ -3,9 +3,10 @@
 # YOUR CODE BELOW THIS LINE
 # ----------------------------------------------------------------------------
 
+set -eu
 
 # launching app
-python3 -m adanet.main
+exec slow --device ${DEVICE} --bandwidth ${BANDWIDTH} --latency ${LATENCY}
 
 
 # ----------------------------------------------------------------------------

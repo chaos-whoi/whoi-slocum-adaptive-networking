@@ -1,11 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
 # YOUR CODE BELOW THIS LINE
 # ----------------------------------------------------------------------------
 
 
 # launching app
-python3 -m adanet.main
+import nmcli
+import json
+
+print(json.dumps(nmcli.device.show_all(), sort_keys=True, indent=4))
 
 
 # ----------------------------------------------------------------------------

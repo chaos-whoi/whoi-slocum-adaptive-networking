@@ -5,7 +5,7 @@
 
 
 # launching app
-python3 -m adanet.main
+exec pppd -detach ${PORT} ${BAUD_RATE} ${LOCAL_IP}:${REMOTE_IP} proxyarp local noauth debug nodetach dump nocrtscts passive persist
 
 
 # ----------------------------------------------------------------------------

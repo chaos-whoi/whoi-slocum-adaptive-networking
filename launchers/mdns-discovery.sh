@@ -5,7 +5,7 @@
 
 
 # launching app
-python3 -m adanet.main
+python3 -m adanet.zeroconf.discovery
 
 
 # ----------------------------------------------------------------------------

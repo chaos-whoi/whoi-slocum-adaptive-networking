@@ -1,1 +1,19 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
+
+# zeroMQ for data passing
+pyzmq
+
+# this is an API to query status of network interfaces
+netifaces
+
+# this is a utility library for cross-platform querying of machine statistics
+psutil
+
+# python implementation of mDNS
+zeroconf
+
+# utility for working with IP addresses and networks
+ipaddress
+
+# network manager CLI API
+nmcli

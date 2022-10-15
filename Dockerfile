@@ -53,6 +53,15 @@ RUN cpk-apt-install ${PROJECT_PATH}/dependencies-apt.txt
 COPY ./dependencies-py3.txt "${PROJECT_PATH}/"
 RUN cpk-pip3-install ${PROJECT_PATH}/dependencies-py3.txt
 
+# install libzmq
+#RUN echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/xUbuntu_18.04/ /' | tee /etc/apt/sources.list.d/network:messaging:zeromq:release-stable.list && \
+#    wget https://download.opensuse.org/repositories/network:messaging:zeromq:release-stable/xUbuntu_18.04/Release.key && \
+#    cat Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/network_messaging_zeromq_release-stable.gpg > /dev/null && \
+#    rm Release.key && \
+#    apt-get update && \
+#    apt-get install -y libzmq3-dev && \
+#    rm -rf /var/lib/apt/lists/*
+
 # install launcher scripts
 COPY ./launchers/. "${PROJECT_LAUNCHERS_PATH}/"
 COPY ./launchers/default.sh "${PROJECT_LAUNCHERS_PATH}/"
@@ -86,3 +95,8 @@ LABEL \
     cpk.label.project.${ORGANIZATION}.${NAME}.maintainer="${MAINTAINER}"
 # <== Do not change the code above this line
 # <==================================================
+
+# copy slow cli
+COPY assets/slow /usr/local/bin/slow
+
+ENV PYTHONUNBUFFERED=1

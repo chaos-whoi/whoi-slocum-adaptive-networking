@@ -1,1 +1,16 @@
 # LIST YOUR APT PACKAGES HERE
+
+# ip/tc
+iproute2
+
+# pppd
+ppp
+
+# used by the nmcli python library
+network-manager
+
+# used to bridge devices and interfaces
+socat
+
+# ping
+iputils-ping

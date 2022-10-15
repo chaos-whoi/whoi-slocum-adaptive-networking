@@ -1,0 +1,79 @@
+version: "2.4"
+services:
+    serial1:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: virtual-serials-pair
+            PORT_A: /dev/ttyV00
+            PORT_B: /dev/ttyV01
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    serial2:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: virtual-serials-pair
+            PORT_A: /dev/ttyV10
+            PORT_B: /dev/ttyV11
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    ppp00: &ppp0
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        container_name: ppp00
+        depends_on:
+            -   serial1
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV00
+            BAUD_RATE: 115200
+            LOCAL_IP: 10.0.0.1
+            REMOTE_IP: 10.0.0.2
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    ppp01:
+        <<: *ppp0
+        container_name: ppp01
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV01
+            BAUD_RATE: 115200
+            LOCAL_IP: 10.0.0.2
+            REMOTE_IP: 10.0.0.1
+
+    ppp10: &ppp1
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        container_name: ppp10
+        depends_on:
+            -   serial2
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV10
+            BAUD_RATE: 115200
+            LOCAL_IP: 10.0.1.1
+            REMOTE_IP: 10.0.1.2
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    ppp11:
+        <<: *ppp1
+        container_name: ppp11
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV11
+            BAUD_RATE: 115200
+            LOCAL_IP: 10.0.1.2
+            REMOTE_IP: 10.0.1.1

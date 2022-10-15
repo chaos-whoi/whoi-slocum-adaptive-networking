@@ -5,7 +5,7 @@
 
 
 # launching app
-python3 -m adanet.main
+exec python3 -m bw.server
 
 
 # ----------------------------------------------------------------------------

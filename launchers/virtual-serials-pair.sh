@@ -5,7 +5,7 @@
 
 
 # launching app
-python3 -m adanet.main
+exec socat -d -d PTY,raw,echo=0,link=${PORT_A} PTY,raw,echo=0,link=${PORT_B}
 
 
 # ----------------------------------------------------------------------------
