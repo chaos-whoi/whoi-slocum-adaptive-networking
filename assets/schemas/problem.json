@@ -1,0 +1,81 @@
+{
+    "type": "object",
+    "properties": {
+        "links": {
+            "type": ["null", "array"],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "interface": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "wifi-b",
+                            "wifi-a",
+                            "wifi-g",
+                            "wifi-n",
+                            "wifi-2.4",
+                            "wifi-ac",
+                            "wifi-5",
+                            "wifi-ax",
+                            "wifi-6",
+                            "ethernet",
+                            "acoustic"
+                        ]
+                    },
+                    "bandwidth": {
+                        "type": ["string", "number"]
+                    },
+                    "latency": {
+                        "type": ["string", "number"]
+                    },
+                    "budget": {
+                        "type": "number"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "additionalItems": false
+        },
+        "channels": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "default": 0
+                    },
+                    "frequency": {
+                        "type": ["null", "number"]
+                    },
+                    "size": {
+                        "type": ["null", "number"]
+                    },
+                    "qos": {
+                        "type": "object",
+                        "properties": {
+                            "latency": {
+                                "type": ["null", "number"]
+                            },
+                            "frequency": {
+                                "type": ["null", "number"]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            }
+        },
+        "simulation": {}
+    },
+    "required": [
+        "channels"
+    ],
+    "additionalProperties": false
+}

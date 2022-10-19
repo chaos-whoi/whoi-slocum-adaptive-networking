@@ -5,5 +5,14 @@
     "organization": "whoi",
     "schema": "1.0",
     "template": null,
-    "version": "0.0.0"
+    "version": "0.0.0",
+    "mappings": [
+        {
+            "source": "./data",
+            "destination": "/data",
+            "triggers": [
+                "run:mount"
+            ]
+        }
+    ]
 }

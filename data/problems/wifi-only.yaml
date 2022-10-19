@@ -1,0 +1,17 @@
+links:
+    - interface: ppp00
+      type: "wifi-2.4"
+    - interface: ppp10
+      type: "wifi-2.4"
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 15.0
+    - name: "/channel_2"
+      frequency: 10.0
+      size: 20
+      qos:
+          frequency: 10.0

@@ -1,0 +1,24 @@
+version: "2.4"
+services:
+
+    # computer0 is the robot and it is the one formulating and solving problems
+
+    problem_for_computer0:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: bash
+        # TODO: we inject either via HTTP request to process or editing an inotify monitored file
+        network_mode: container:computer0
+        volumes_from:
+            -   computer0
+
+    # computer1 is the ship, and it is the one analyzing the solution
+
+    problem_for_computer1:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        environment:
+            CPK_LAUNCHER: bash
+        # TODO: we inject either via HTTP request to process or editing an inotify monitored file
+        network_mode: container:computer1
+        volumes_from:
+            -   computer1

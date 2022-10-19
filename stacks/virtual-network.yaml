@@ -1,7 +1,9 @@
 version: "2.4"
 services:
-    serial1:
+
+    serial0:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        container_name: serial0
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV00
@@ -12,8 +14,9 @@ services:
                 source: /dev
                 target: /dev
 
-    serial2:
+    serial1:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        container_name: serial1
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV10
@@ -24,18 +27,31 @@ services:
                 source: /dev
                 target: /dev
 
+    computer0: &computer
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        container_name: computer0
+        environment:
+            CPK_LAUNCHER: sleep
+        command: -- infinity
+
+    computer1:
+        <<: *computer
+        container_name: computer1
+
     ppp00: &ppp0
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
         container_name: ppp00
         depends_on:
-            -   serial1
+            -   serial0
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV00
             BAUD_RATE: 115200
+            NET_IFACE: 0
             LOCAL_IP: 10.0.0.1
             REMOTE_IP: 10.0.0.2
         privileged: true
+        network_mode: service:computer0
         volumes:
             -   type: bind
                 source: /dev
@@ -44,10 +60,12 @@ services:
     ppp01:
         <<: *ppp0
         container_name: ppp01
+        network_mode: service:computer1
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV01
             BAUD_RATE: 115200
+            NET_IFACE: 0
             LOCAL_IP: 10.0.0.2
             REMOTE_IP: 10.0.0.1
 
@@ -55,14 +73,16 @@ services:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
         container_name: ppp10
         depends_on:
-            -   serial2
+            -   serial1
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV10
             BAUD_RATE: 115200
+            NET_IFACE: 1
             LOCAL_IP: 10.0.1.1
             REMOTE_IP: 10.0.1.2
         privileged: true
+        network_mode: service:computer0
         volumes:
             -   type: bind
                 source: /dev
@@ -71,9 +91,11 @@ services:
     ppp11:
         <<: *ppp1
         container_name: ppp11
+        network_mode: service:computer1
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV11
             BAUD_RATE: 115200
+            NET_IFACE: 1
             LOCAL_IP: 10.0.1.2
             REMOTE_IP: 10.0.1.1

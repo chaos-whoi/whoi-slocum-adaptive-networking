@@ -16,20 +16,22 @@ from ..constants import \
     IFACE_LATENCY_CHECK_EVERY_SECS, \
     ZERO, IFACE_BANDWIDTH_OPTIMISM, IFACE_MIN_BANDWIDTH_BYTES_SEC, DEBUG
 from ..exceptions import InterfaceNotFoundError
-from ..types import Shuttable, NetworkRole, NetworkDevice
+from ..types import Shuttable
+from ..types.network import NetworkDevice
+from ..types.agent import AgentRole
 from ..zeroconf import zc
 from ..zeroconf.services import NetworkPeerService
 
 
 class Adapter(Shuttable, ABC):
 
-    def __init__(self, role: NetworkRole, device: NetworkDevice):
+    def __init__(self, role: AgentRole, device: NetworkDevice):
         Shuttable.__init__(self)
         # make sure the interface exists
         iface: str = device.interface
         if iface not in netifaces.interfaces():
             raise InterfaceNotFoundError(iface)
-        self._role: NetworkRole = role
+        self._role: AgentRole = role
         self._iface: str = iface
         self._key: str = str(uuid.uuid4())
         # internal state
@@ -150,10 +152,11 @@ class Adapter(Shuttable, ABC):
         self._socket = context.socket(zmq.PAIR)
         port: int = 0
         # role: server
-        if self._role is NetworkRole.SERVER:
+        if self._role is AgentRole.SHIP:
+            # noinspection PyUnresolvedReferences
             port: int = self._socket.bind_to_random_port(f"tcp://{self.ip_address}")
         # role: client
-        if self._role is NetworkRole.CLIENT:
+        if self._role is AgentRole.ROBOT:
             server_ip = self._zeroconf_peer_srv.addresses[0]
             server_port = self._zeroconf_peer_srv.port
             self._socket.connect(f"tcp://{server_ip}:{server_port}")

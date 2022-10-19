@@ -17,3 +17,6 @@ ipaddress
 
 # network manager CLI API
 nmcli
+
+# data validation and settings management using Python type annotations.
+pydantic

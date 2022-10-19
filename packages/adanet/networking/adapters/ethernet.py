@@ -1,5 +1,5 @@
 from .. import Adapter
-from ...types import NetworkDevice
+from ...types.network import NetworkDevice
 
 
 class EthernetAdapter(Adapter):

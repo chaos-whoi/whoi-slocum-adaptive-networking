@@ -5,12 +5,12 @@ from typing import Optional
 from zeroconf import ServiceInfo
 
 from ..constants import ZEROCONF_PREFIX
-from ..types import NetworkRole
+from ..types.agent import AgentRole
 
 
 class NetworkPeerService(ServiceInfo):
 
-    def __init__(self, role: NetworkRole, key: str, iface: str, address: IPv4Address,
+    def __init__(self, role: AgentRole, key: str, iface: str, address: IPv4Address,
                  network: IPv4Network, port: int, payload: Optional[dict] = None):
         properties = {"payload": payload or {}}
         properties.update(

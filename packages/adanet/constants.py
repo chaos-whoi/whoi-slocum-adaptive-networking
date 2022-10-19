@@ -15,3 +15,5 @@ IFACE_BANDWIDTH_OPTIMISM = 0.5
 ZEROCONF_PREFIX = "_adanet._tcp.local."
 
 ALLOW_DEVICE_TYPES = os.environ.get("ALLOW_DEVICE_TYPES", "all").split(",")
+
+FORMULATE_PROBLEM_EVERY_SEC = 5

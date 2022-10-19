@@ -9,20 +9,23 @@ from .adapters.ethernet import EthernetAdapter
 from .adapters.ppp import PPPAdapter
 from .adapters.wifi import WifiAdapter
 from ..constants import ALLOW_DEVICE_TYPES
-from ..types import Shuttable, NetworkDevice, NetworkRole
+from ..types import Shuttable
+from ..types.network import NetworkDevice
+from ..types.agent import AgentRole
 
 
 class NetworkManager(Shuttable, Thread):
+
     _adapter_classes = {
         "wifi": WifiAdapter,
         "ethernet": EthernetAdapter,
         "ppp": PPPAdapter,
     }
 
-    def __init__(self, role: NetworkRole):
+    def __init__(self, role: AgentRole):
         Thread.__init__(self, daemon=True)
         Shuttable.__init__(self)
-        self._role: NetworkRole = role
+        self._role: AgentRole = role
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
 
