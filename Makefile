@@ -17,6 +17,10 @@ PPP_REMOTE_IP=10.0.0.2
 PPP_REMOTE_DEV=/dev/ttyUSB0
 PPP_BAUD_RATE=115200
 REMOTE_MACHINE=gliderpi.local
+OUT_DIR=./out
+COVERAGE_DIR=${OUT_DIR}/coverage
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 
 slow:
 	docker exec -it $(SLOW_TARGET) slow $(SLOW_ARGS)
@@ -82,3 +86,17 @@ show-network-configuration:
 	@docker exec ppp11 tc class show dev ppp0
 	@docker exec ppp11 tc qdisc show dev ppp0
 	@echo "--------------------------------------------------------------------------------------"
+
+tests2:
+	PYTHONPATH=${ROOT_DIR}/packages:${PYTHONPATH} \
+		nosetests \
+			--rednose \
+			--immediate \
+			--cover-html \
+			--cover-html-dir=${COVERAGE_DIR} \
+			--cover-tests \
+			--with-coverage \
+			--cover-package=adanet \
+			--where=tests \
+			-v \
+			--nologcapture

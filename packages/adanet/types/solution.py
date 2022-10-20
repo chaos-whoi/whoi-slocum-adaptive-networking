@@ -1,20 +1,29 @@
+import json
 from typing import List, Any, Dict, Optional
 
-from pydantic import BaseModel
+import yaml
 
-from ..types.misc import Reminder
+from ..types.misc import Reminder, GenericModel
 from ..types.problem import Problem, Channel
 
 
-class SolvedChannel(BaseModel):
+class SolvedChannel(GenericModel):
     name: str
     frequency: float
     interfaces: List[str]
     problem: Channel
 
+    # internal use only
+    _reminder: Reminder
+
+    class Config:
+        underscore_attrs_are_private = True
+
     def __init__(self, **data: Any):
         super().__init__(**data)
-        self._reminder: Reminder = Reminder(frequency=self.frequency)
+        self._reminder: Optional[Reminder] = None
+        if self.frequency > 0:
+            self._reminder = Reminder(frequency=self.frequency)
 
     def _iface_iterator(self) -> Optional[str]:
         cursor: int = 0
@@ -26,13 +35,16 @@ class SolvedChannel(BaseModel):
             yield self.interfaces[cursor]
 
     def _is_time(self):
-        return self._reminder.is_time()
+        return self._reminder is not None and self._reminder.is_time()
 
     def next(self):
         return self._iface_iterator()
 
+    def as_json(self) -> str:
+        return self.json(sort_keys=True, indent=4, exclude={"problem"})
 
-class Solution(BaseModel):
+
+class Solution(GenericModel):
     problem: Problem
     assignments: List[SolvedChannel]
 
@@ -91,4 +103,4 @@ class Solution(BaseModel):
         return sent / total if total > 0 else 0
 
     def as_json(self) -> str:
-        return self.json(sort_keys=True, indent=4)
+        return self.json(sort_keys=True, indent=4, exclude={"problem"})

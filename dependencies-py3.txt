@@ -20,3 +20,7 @@ nmcli
 
 # data validation and settings management using Python type annotations.
 pydantic
+
+# tests
+nose
+rednose

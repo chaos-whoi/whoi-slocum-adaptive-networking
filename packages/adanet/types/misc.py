@@ -1,8 +1,23 @@
+import json
 import time
 from collections import Callable
 from typing import Set
 
+import yaml
+from pydantic import BaseModel
+
 from ..exceptions import InvalidStateError
+
+
+class GenericModel(BaseModel):
+    class Config:
+        underscore_attrs_are_private = True
+
+    def as_json(self) -> str:
+        return self.json(sort_keys=True, indent=4)
+
+    def as_yaml(self) -> str:
+        return yaml.safe_dump(json.loads(self.as_json()), sort_keys=True, indent=4)
 
 
 class Shuttable:

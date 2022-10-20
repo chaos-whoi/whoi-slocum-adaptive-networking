@@ -41,6 +41,7 @@ def main():
           f"\tsolver: {parsed.solver}\n"
           f"\tproblem: {problem_fpath}\n")
     engine = Engine(role=role, solver=solver, problem=problem)
+    engine.start()
 
     # wait for the engine to finish
     engine.join()

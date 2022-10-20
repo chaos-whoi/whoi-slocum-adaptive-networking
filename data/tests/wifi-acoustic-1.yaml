@@ -1,0 +1,20 @@
+links:
+    - interface: ppp00
+      type: "wifi-2.4"
+      budget: "1Kb"
+    - interface: ppp10
+      type: "acoustic"
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 15.0
+    - name: "/channel_2"
+      frequency: 10.0
+      size: 20
+      priority: 0
+      qos:
+          frequency: 10.0
+          latency: "2ms"

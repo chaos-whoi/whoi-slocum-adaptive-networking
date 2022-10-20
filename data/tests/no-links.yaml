@@ -1,0 +1,9 @@
+links: []
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 1
+    - name: "/channel_2"
+      frequency: 30.0
+      size: 1

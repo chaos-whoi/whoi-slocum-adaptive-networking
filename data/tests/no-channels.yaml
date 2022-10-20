@@ -1,0 +1,6 @@
+links:
+    - interface: ppp00
+      type: "wifi-2.4"
+    - interface: ppp10
+      type: "acoustic"
+channels: []

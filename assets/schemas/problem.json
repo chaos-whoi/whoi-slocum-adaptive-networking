@@ -32,7 +32,7 @@
                         "type": ["string", "number"]
                     },
                     "budget": {
-                        "type": "number"
+                        "type": ["string", "number"]
                     }
                 },
                 "additionalProperties": false
@@ -61,10 +61,17 @@
                         "type": "object",
                         "properties": {
                             "latency": {
-                                "type": ["null", "number"]
+                                "type": ["null", "string", "number"]
                             },
                             "frequency": {
                                 "type": ["null", "number"]
+                            },
+                            "latency_policy": {
+                                "type": "string",
+                                "enum": [
+                                    "best-effort",
+                                    "strict"
+                                ]
                             }
                         },
                         "additionalProperties": false

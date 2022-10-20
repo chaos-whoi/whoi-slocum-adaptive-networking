@@ -1,20 +1,22 @@
-import json
-from typing import Optional, List, Callable, Dict
+from enum import Enum
+from typing import Optional, List, Callable
 
-import yaml
-from pydantic import BaseModel, root_validator, validator
-from pydantic.fields import ModelField
+from pydantic import validator
 
 from adanet.networking.constants import NETWORK_TECHNOLOGIES
-from adanet.utils import parse_bandwidth_str, parse_latency_str
+from adanet.types.misc import GenericModel
+from adanet.utils import parse_bandwidth_str, parse_latency_str, parse_size_str
 
 
-class Link(BaseModel):
+class LatencyPolicy(Enum):
+    BEST_EFFORT = "best-effort"
+    STRICT = "strict"
 
+
+class Link(GenericModel):
     class Config:
         extra = "allow"
         validate_all = True
-
 
     # name of the network interface at the OS level
     interface: str
@@ -47,7 +49,6 @@ class Link(BaseModel):
             "bandwidth": parse_bandwidth_str,
             "latency": parse_latency_str,
         }[field.name]
-        print(v, values)
         # give precedence to explicit field value (if given)
         if v is not None:
             return parser(v)
@@ -59,35 +60,35 @@ class Link(BaseModel):
             tech: dict = NETWORK_TECHNOLOGIES[t]
             return parser(tech[field.name])
 
-    # # noinspection PyMethodParameters
-    # @root_validator
-    # def _apply_network_interface_type(cls, values):
-    #     """
-    #     Populates the bandwidth and latency fields according to the given network interface
-    #     technology type.
-    #
-    #     :param values:  dictionary of raw values being parsed
-    #     :return:        dictionary of updated values
-    #     """
-    #     print(values)
-    #     if values["type"] is not None:
-    #         t: str = values["type"].strip().lower()
-    #         if t not in NETWORK_TECHNOLOGIES:
-    #             raise ValueError(f"Technology '{t}' not recognized")
-    #         tech: dict = NETWORK_TECHNOLOGIES[t]
-    #         for k, v in tech.items():
-    #             if k not in values or values[k] is None:
-    #                 values[k] = v
-    #     print(values)
-    #     return values
+    # noinspection PyMethodParameters
+    @validator("budget", pre=True)
+    def _parse_budget(cls, v):
+        """
+        Parses budget string into number of bytes.
+
+        :return:   number of bytes
+        """
+        if v is not None:
+            return parse_size_str(v)
 
 
-class ChannelQoS(BaseModel):
+class ChannelQoS(GenericModel):
     latency: Optional[float] = None
     frequency: Optional[float] = None
+    latency_policy: LatencyPolicy = LatencyPolicy.BEST_EFFORT
+
+    # noinspection PyMethodParameters
+    @validator("latency", pre=True)
+    def _parse_latency(cls, v):
+        """
+        Parses latency string into number of seconds.
+
+        :return:   number of seconds
+        """
+        return parse_latency_str(v)
 
 
-class Channel(BaseModel):
+class Channel(GenericModel):
     name: str
     priority: int = 0
     frequency: Optional[float] = None
@@ -95,12 +96,6 @@ class Channel(BaseModel):
     qos: Optional[ChannelQoS] = None
 
 
-class Problem(BaseModel):
+class Problem(GenericModel):
     links: Optional[List[Link]] = None
     channels: List[Channel]
-
-    def as_json(self) -> str:
-        return self.json(sort_keys=True, indent=4)
-
-    def as_yaml(self) -> str:
-        return yaml.safe_dump(json.loads(self.as_json()))

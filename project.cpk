@@ -12,6 +12,22 @@
             "destination": "/data",
             "triggers": [
                 "run:mount"
+            ],
+            "mode": "ro"
+        },
+        {
+            "source": "./tests",
+            "destination": "/tests",
+            "triggers": [
+                "run:mount"
+            ],
+            "mode": "ro"
+        },
+        {
+            "source": "./out",
+            "destination": "/out",
+            "triggers": [
+                "run:mount"
             ]
         }
     ]

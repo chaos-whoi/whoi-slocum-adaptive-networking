@@ -22,15 +22,14 @@ class Engine(Shuttable, Thread):
         self._switchboard: Switchboard = Switchboard(role=role)
 
     def _formulate_new_problem(self) -> Problem:
-        # TODO: returns same problem again and again
+        # TODO: for now returns same problem again and again
         return self._problem
 
     def _solve_problem(self) -> Solution:
         stime = time.time()
         solution = self._solver.solve(self._problem)
-        ftime = time.time() - stime
-        print(f" solved in {ftime - stime:.2f}secs")
-        _stime = time.time()
+        ftime = time.time()
+        print(f" solved in {ftime - stime:.2f} secs")
         return solution
 
     def run(self):
@@ -42,13 +41,14 @@ class Engine(Shuttable, Thread):
             if time.time() - stime >= FORMULATE_PROBLEM_EVERY_SEC:
                 print("Formulating new problem...")
                 solution = None
+                stime = time.time()
             # solve problem (if needed)
             if solution is None:
                 self._problem = self._formulate_new_problem()
-                print(f"Problem definition:\n{self._problem.as_json()}")
+                print(f"Problem definition:\n{self._problem.as_yaml()}")
                 print("Solving new problem...", end='')
                 solution = self._solve_problem()
-                print(f"Solution found:\n{solution.as_json()}")
+                print(f"Solution found:\n{solution.as_yaml()}")
                 # inform the switchboard of a new solution
                 self._switchboard.update_solution(solution)
             # let the switchbox do its job
