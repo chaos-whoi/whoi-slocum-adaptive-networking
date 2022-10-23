@@ -6,9 +6,6 @@ iproute2
 # pppd
 ppp
 
-# used by the nmcli python library
-network-manager
-
 # used to bridge devices and interfaces
 socat
 

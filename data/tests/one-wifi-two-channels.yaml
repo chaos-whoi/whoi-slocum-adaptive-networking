@@ -1,0 +1,11 @@
+links:
+    - interface: wlan0
+      type: "wifi-2.4"
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+    - name: "/channel_2"
+      frequency: 10.0
+      size: 10

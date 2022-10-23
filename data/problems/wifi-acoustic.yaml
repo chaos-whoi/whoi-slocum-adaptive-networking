@@ -1,8 +1,8 @@
 links:
-    - interface: ppp00
+    - interface: ppp0
       type: "wifi-2.4"
       budget: "1Kb"
-    - interface: ppp10
+    - interface: ppp1
       type: "acoustic"
 
 channels:

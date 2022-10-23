@@ -100,3 +100,6 @@ tests2:
 			--where=tests \
 			-v \
 			--nologcapture
+
+sample-computer0:
+	cpk run -M -f ++ robot -s SimpleSolver -p /data/problems/wifi-only.yaml -S -- --privileged -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket --network container:computer0

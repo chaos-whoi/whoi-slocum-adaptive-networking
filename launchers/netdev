@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+# YOUR CODE BELOW THIS LINE
+# ----------------------------------------------------------------------------
+
+
+# launching app
+from pyroute2 import IPRoute
+ip = IPRoute()
+
+
+def get_netdevs():
+    netdevs = {}
+    for netdev in ip.get_links():
+        name: str = netdev.get_attr('IFLA_IFNAME')
+        link = netdev.get_attr('IFLA_LINKINFO')
+        if link is not None:
+            link = link.get_attr('IFLA_INFO_KIND')
+            netdevs[name] = link
+    print(netdevs)
+get_netdevs()
+
+
+# ----------------------------------------------------------------------------
+# YOUR CODE ABOVE THIS LINE

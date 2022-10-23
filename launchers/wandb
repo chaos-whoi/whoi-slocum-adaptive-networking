@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+# YOUR CODE BELOW THIS LINE
+# ----------------------------------------------------------------------------
+import time
+
+import wandb
+
+
+wandb.login(key="9c9f492d9419ea478dbd7540806190989e1d9877")
+
+
+# api = wandb.Api()
+# run = api.run("/afdaniele-ttic/test/runs/1qtog975")
+# print(run.history(pandas=False))
+# exit(0)
+
+
+
+
+run = wandb.init(project="test", entity="afdaniele-ttic")
+
+for t in range(100):
+    commit = True
+    v = t // 10
+    run.log({"t": t, "v": t}, commit=commit)
+    time.sleep(0.1)
+
+for t in range(100):
+    commit = True
+    v = t // 10
+    run.log({"t": t, "z": 2*t}, commit=commit)
+    time.sleep(0.1)
+
+run.finish()
+
+# ----------------------------------------------------------------------------
+# YOUR CODE ABOVE THIS LINE

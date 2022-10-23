@@ -139,13 +139,18 @@ class Adapter(Shuttable, ABC):
         if DEBUG:
             self._debug_worker.start()
 
+    def send(self, channel: str, data: bytes):
+        # TODO: implement this
+        print(f"SENDING {len(data)}B for '{channel}' through '{self.name}'")
+
     def update(self, device: NetworkDevice) -> None:
         """
         Updates the internal state given a new network device object from the network manager.
         """
         self._update(device)
-        if self._socket is None:
-            self.connect()
+        # TODO: re-enable this
+        # if self._socket is None:
+        #     self.connect()
 
     def connect(self):
         context = zmq.Context()

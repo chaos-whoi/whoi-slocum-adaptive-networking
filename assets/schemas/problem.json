@@ -79,7 +79,45 @@
                 }
             }
         },
-        "simulation": {}
+        "simulation": {
+            "type": "object",
+            "properties": {
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "interface":  {
+                                "type": "string"
+                            },
+                            "bandwidth": {
+                                "type": ["string"]
+                            },
+                            "latency": {
+                                "type": ["string"]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type":  "string"
+                            },
+                            "frequency": {
+                                "type": ["string"]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
     },
     "required": [
         "channels"

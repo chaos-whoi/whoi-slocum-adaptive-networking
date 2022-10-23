@@ -1,7 +1,8 @@
 import json
 import time
-from collections import Callable
-from typing import Set
+from abc import abstractmethod
+from collections import Callable, defaultdict
+from typing import Set, Dict
 
 import yaml
 from pydantic import BaseModel
@@ -12,6 +13,7 @@ from ..exceptions import InvalidStateError
 class GenericModel(BaseModel):
     class Config:
         underscore_attrs_are_private = True
+        use_enum_values = True
 
     def as_json(self) -> str:
         return self.json(sort_keys=True, indent=4)
@@ -19,12 +21,19 @@ class GenericModel(BaseModel):
     def as_yaml(self) -> str:
         return yaml.safe_dump(json.loads(self.as_json()), sort_keys=True, indent=4)
 
+    @abstractmethod
+    def report(self) -> dict:
+        pass
+
 
 class Shuttable:
+    _shuttables: Dict[int, Set['Shuttable']] = defaultdict(set)
 
-    def __init__(self):
+    def __init__(self, priority: int = 0):
         self._is_shutdown: bool = False
         self._callbacks: Set[Callable] = set()
+        # keep track of all shuttables
+        Shuttable._shuttables[priority].add(self)
 
     @property
     def is_shutdown(self) -> bool:
@@ -49,6 +58,7 @@ class Shuttable:
                 time.sleep(nap_duration)
         except KeyboardInterrupt:
             print("Received a Keyboard Interrupt, exiting...")
+            Shuttable.shutdown_all()
 
     def mark_as_shutdown(self):
         self._is_shutdown = True
@@ -61,6 +71,12 @@ class Shuttable:
         if not was_shutdown:
             for cb in self._callbacks:
                 cb()
+
+    @classmethod
+    def shutdown_all(cls):
+        for priority in sorted(cls._shuttables.keys(), reverse=True):
+            for shuttable in cls._shuttables[priority]:
+                shuttable.shutdown()
 
 
 class Reminder:

@@ -15,12 +15,18 @@ zeroconf
 # utility for working with IP addresses and networks
 ipaddress
 
-# network manager CLI API
-nmcli
-
 # data validation and settings management using Python type annotations.
 pydantic
 
 # tests
 nose
 rednose
+
+# network devices API
+pyroute2
+
+# weights and biases: data logging
+wandb
+
+# flat dictionaries
+flatdict

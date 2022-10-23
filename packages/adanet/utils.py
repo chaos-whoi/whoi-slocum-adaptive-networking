@@ -114,3 +114,8 @@ def find_shortest_whole_repetitive_pattern(sequence: List[str]) -> List[str]:
     swrs: str = match.group(1)
     # convert swrs to sequence pattern
     return swrs.strip("|").split("|")
+
+
+def indent_block(s: str, indent: int = 4) -> str:
+    space: str = " " * indent
+    return space + f"\n{space}".join(s.splitlines())

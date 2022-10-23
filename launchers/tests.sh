@@ -8,7 +8,7 @@ mkdir -p /out/coverage
 
 
 # launching app
-nosetests \
+nosetests3 \
     --rednose \
     --immediate \
     --cover-html \

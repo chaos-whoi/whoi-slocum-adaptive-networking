@@ -4,7 +4,7 @@ import dataclasses
 
 
 class NetworkDeviceType(Enum):
-    ETHERNET = "ethernet"
+    ETHERNET = "veth"
     WIFI = "wifi"
     PPP = "ppp"
 
@@ -15,17 +15,17 @@ class NetworkDeviceState(IntEnum):
     DISCONNECTED = 20
     CONNECTED = 30
 
-    @staticmethod
-    def from_nmcli_output(state: str):
-        if state == "connected":
-            return NetworkDeviceState.CONNECTED
-        if state == "unavailable":
-            return NetworkDeviceState.NOLINK
-        if state == "unmanaged":
-            return NetworkDeviceState.DISCONNECTED
-        if state == "disconnected":
-            return NetworkDeviceState.DISCONNECTED
-        raise ValueError(f"Unknown network state '{state}'")
+    # @staticmethod
+    # def from_nmcli_output(state: str):
+    #     if state == "connected":
+    #         return NetworkDeviceState.CONNECTED
+    #     if state == "unavailable":
+    #         return NetworkDeviceState.NOLINK
+    #     if state == "unmanaged":
+    #         return NetworkDeviceState.DISCONNECTED
+    #     if state == "disconnected":
+    #         return NetworkDeviceState.DISCONNECTED
+    #     raise ValueError(f"Unknown network state '{state}'")
 
 
 @dataclasses.dataclass
@@ -35,11 +35,11 @@ class NetworkDevice:
     state: NetworkDeviceState
     connection: str
 
-    @staticmethod
-    def from_nmcli_output(info) -> 'NetworkDevice':
-        return NetworkDevice(
-            interface=info.device,
-            type=NetworkDeviceType(info.device_type),
-            state=NetworkDeviceState.from_nmcli_output(info.state),
-            connection=info.connection,
-        )
+    # @staticmethod
+    # def from_nmcli_output(info) -> 'NetworkDevice':
+    #     return NetworkDevice(
+    #         interface=info.device,
+    #         type=NetworkDeviceType(info.device_type),
+    #         state=NetworkDeviceState.from_nmcli_output(info.state),
+    #         connection=info.connection,
+    #     )

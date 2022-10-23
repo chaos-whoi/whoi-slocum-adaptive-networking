@@ -26,7 +26,7 @@ class Link(GenericModel):
 
     # network flow properties
     bandwidth: Optional[float] = None
-    latency: Optional[float] = None
+    latency: float = 0
 
     # the overall budget in Bytes that this link can use
     budget: Optional[float] = None
@@ -51,7 +51,10 @@ class Link(GenericModel):
         }[field.name]
         # give precedence to explicit field value (if given)
         if v is not None:
-            return parser(v)
+            if not isinstance(v, (int, float)):
+                return parser(v)
+            else:
+                return float(v)
         # populate field according to type (if given)
         if values["type"] is not None:
             t: str = values["type"].strip().lower()
@@ -71,6 +74,14 @@ class Link(GenericModel):
         if v is not None:
             return parse_size_str(v)
 
+    def report(self) -> dict:
+        return {
+            "bandwidth": self.bandwidth,
+            "latency": self.latency,
+            "budget": self.budget,
+            "capacity": self.capacity,
+        }
+
 
 class ChannelQoS(GenericModel):
     latency: Optional[float] = None
@@ -87,6 +98,12 @@ class ChannelQoS(GenericModel):
         """
         return parse_latency_str(v)
 
+    def report(self) -> dict:
+        return {
+            "latency": self.latency,
+            "frequency": self.frequency,
+        }
+
 
 class Channel(GenericModel):
     name: str
@@ -95,7 +112,52 @@ class Channel(GenericModel):
     size: Optional[int] = None
     qos: Optional[ChannelQoS] = None
 
+    def report(self) -> dict:
+        return {
+            "priority": self.priority,
+            "frequency": self.frequency,
+            "size": self.size,
+            "qos": self.qos.report(),
+        }
+
+
+class SimulatedChannel(GenericModel):
+    name: str
+    frequency: Optional[str] = None
+
+    def report(self) -> dict:
+        return {}
+
+
+class SimulatedLink(GenericModel):
+    interface: str
+    bandwidth: Optional[str] = None
+    latency: Optional[str] = None
+
+    def report(self) -> dict:
+        return {}
+
+
+class Simulation(GenericModel):
+    links: Optional[List[SimulatedLink]]
+    channels: Optional[List[SimulatedChannel]]
+
+    def report(self) -> dict:
+        return {}
+
 
 class Problem(GenericModel):
     links: Optional[List[Link]] = None
     channels: List[Channel]
+    simulation: Optional[Simulation] = None
+    name: str = "real"
+
+    def report(self) -> dict:
+        return {
+            "links": {
+                link.interface: link.report() for link in self.links
+            },
+            "channels": {
+                channel.name.strip("/"): channel.report() for channel in self.channels
+            }
+        }

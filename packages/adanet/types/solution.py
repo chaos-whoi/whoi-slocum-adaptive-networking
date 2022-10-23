@@ -1,7 +1,5 @@
-import json
-from typing import List, Any, Dict, Optional
-
-import yaml
+from collections import defaultdict
+from typing import List, Any, Dict, Optional, Iterator
 
 from ..types.misc import Reminder, GenericModel
 from ..types.problem import Problem, Channel
@@ -14,6 +12,7 @@ class SolvedChannel(GenericModel):
     problem: Channel
 
     # internal use only
+    _iterator: Iterator[str]
     _reminder: Reminder
 
     class Config:
@@ -22,26 +21,45 @@ class SolvedChannel(GenericModel):
     def __init__(self, **data: Any):
         super().__init__(**data)
         self._reminder: Optional[Reminder] = None
+        self._iterator = self._iface_iterator()
         if self.frequency > 0:
             self._reminder = Reminder(frequency=self.frequency)
 
-    def _iface_iterator(self) -> Optional[str]:
+    def _iface_iterator(self) -> Iterator[str]:
         cursor: int = 0
-        while True:
-            if cursor >= len(self.interfaces):
-                cursor = 0
-            if not self._is_time():
-                yield None
-            yield self.interfaces[cursor]
+        if len(self.interfaces) > 0:
+            while True:
+                if cursor >= len(self.interfaces):
+                    cursor = 0
+                if not self._is_time():
+                    yield None
+                    continue
+                yield self.interfaces[cursor]
+                cursor += 1
 
     def _is_time(self):
         return self._reminder is not None and self._reminder.is_time()
 
     def next(self):
-        return self._iface_iterator()
+        try:
+            return next(self._iterator)
+        except StopIteration:
+            return None
 
-    def as_json(self) -> str:
-        return self.json(sort_keys=True, indent=4, exclude={"problem"})
+    def dict(self, *_, **__) -> Dict:
+        d = super(SolvedChannel, self).dict(*_, **__)
+        del d["problem"]
+        return d
+
+    def report(self) -> dict:
+        histogram: Dict[str, int] = defaultdict(lambda: 0)
+        for iface in self.interfaces:
+            histogram[iface] += 1
+        usage = {k: v / len(self.interfaces) for k, v in histogram.items()}
+        return {
+            "frequency": self.frequency,
+            "usage": usage
+        }
 
 
 class Solution(GenericModel):
@@ -104,3 +122,8 @@ class Solution(GenericModel):
 
     def as_json(self) -> str:
         return self.json(sort_keys=True, indent=4, exclude={"problem"})
+
+    def report(self) -> dict:
+        return {
+            ch.name.strip("/"): ch.report() for ch in self.assignments
+        }

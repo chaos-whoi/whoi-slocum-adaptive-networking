@@ -1,8 +1,10 @@
 import time
 from threading import Thread, Semaphore
-from typing import Set, Dict, Type
+from typing import Set, Dict, Type, Tuple, List, Iterable
 
-import nmcli
+# import nmcli
+from pydantic.networks import NetworkType
+from pyroute2 import IPRoute, IW
 
 from . import Adapter
 from .adapters.ethernet import EthernetAdapter
@@ -10,7 +12,7 @@ from .adapters.ppp import PPPAdapter
 from .adapters.wifi import WifiAdapter
 from ..constants import ALLOW_DEVICE_TYPES
 from ..types import Shuttable
-from ..types.network import NetworkDevice
+from ..types.network import NetworkDevice, NetworkDeviceType, NetworkDeviceState
 from ..types.agent import AgentRole
 
 
@@ -18,27 +20,37 @@ class NetworkManager(Shuttable, Thread):
 
     _adapter_classes = {
         "wifi": WifiAdapter,
-        "ethernet": EthernetAdapter,
+        "veth": EthernetAdapter,
         "ppp": PPPAdapter,
     }
 
     def __init__(self, role: AgentRole):
-        Thread.__init__(self, daemon=True)
         Shuttable.__init__(self)
+        Thread.__init__(self, daemon=True)
         self._role: AgentRole = role
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
+        self._inited: bool = False
+        # network APIs
+        self._ip = IPRoute()
+        self._iw = IW()
 
     def _setup_new_adapter(self, device: NetworkDevice):
         cls: Type[Adapter] = self._adapter_classes[device.type.value]
         return cls(self._role, device)
 
+    def send(self, interface: str, channel: str, data: bytes):
+        if interface not in self._adapters:
+            if self._inited:
+                print(f"ERROR: Unknown interface '{interface}'")
+                return
+        self._adapters[interface].send(channel, data)
+
     def run(self):
         ignored: Set[str] = set()
         while not self.is_shutdown:
             new_adapters: Set[Adapter] = set()
-            for dev_nmcli in nmcli.device.status():
-                dev, devt = dev_nmcli.device, dev_nmcli.device_type
+            for dev, devt in self.get_devices():
                 # filter devices based on their type
                 if devt not in self._adapter_classes:
                     if dev not in ignored:
@@ -55,7 +67,19 @@ class NetworkManager(Shuttable, Thread):
                 with self._lock:
                     if dev not in self._adapters:
                         print(f"Attaching to device '{dev}' of type '{devt}'")
-                        device = NetworkDevice.from_nmcli_output(dev_nmcli)
+
+                        # TODO: remove this
+                        # device = NetworkDevice.from_nmcli_output(dev_nmcli)
+
+                        device = NetworkDevice(
+                            interface=dev,
+                            type=NetworkDeviceType(devt),
+                            # TODO: figure this out some other way
+                            state=NetworkDeviceState.CONNECTED,
+                            # TODO: figure this out some other way
+                            connection=""
+                        )
+
                         adapter = self._setup_new_adapter(device)
                         self._adapters[dev] = adapter
                         new_adapters.add(adapter)
@@ -64,4 +88,21 @@ class NetworkManager(Shuttable, Thread):
             # activate new adapters
             for adapter in new_adapters:
                 adapter.start()
+            self._inited = True
             time.sleep(4)
+
+    def get_devices(self) -> List[Tuple[str, str]]:
+        devices: Dict[str, str] = {}
+        # get wifi devices
+        for netdev in self._iw.get_interfaces_dict().keys():
+            devices[netdev] = "wifi"
+        # get all other devices
+        for netdev in self._ip.get_links():
+            name: str = netdev.get_attr('IFLA_IFNAME')
+            link = netdev.get_attr('IFLA_LINKINFO')
+            if link is not None:
+                link = link.get_attr('IFLA_INFO_KIND')
+                devices[name] = link
+        # ---
+        # noinspection PyTypeChecker
+        return list(devices.items())
