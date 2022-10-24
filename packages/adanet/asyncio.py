@@ -3,10 +3,31 @@ import functools
 from asyncio import AbstractEventLoop
 from concurrent.futures import Future
 from threading import Thread, current_thread, Event
-from typing import Optional, Set
+from typing import Optional, Set, Callable
 
-from adanet.time import Clock
+from adanet.exceptions import StopTaskException
 from adanet.types import Shuttable
+
+
+class Task(Shuttable):
+
+    def __init__(self, period: float, target: Optional[Callable] = None):
+        super(Task, self).__init__()
+        self._period: float = period
+        self._target: Optional[Callable] = target
+
+    @property
+    def period(self) -> float:
+        return self._period
+
+    @period.setter
+    def period(self, value: float):
+        self._period = value
+
+    def step(self, *args, **kwargs):
+        if self._target is None:
+            raise ValueError("If you do not subclass 'Task', the field 'target' becomes mandatory")
+        self._target(*args, **kwargs)
 
 
 class EventLoop(Shuttable, Thread):
@@ -18,17 +39,18 @@ class EventLoop(Shuttable, Thread):
         self.tid: Optional[Thread] = None
         self.event = start_event
         self._futures: Set[Future] = set()
-        self._tasks: Set[Future] = set()
 
     @asyncio.coroutine
-    def _every(self, period: float, func, *args, **kwargs):
-        task_switch: Shuttable = Shuttable()
+    def _every(self, task: Task, *args, **kwargs):
         future = Future()
         self._futures.add(future)
         # execute until shutdown
-        while not task_switch.is_shutdown:
-            func(*args, **kwargs)
-            yield from asyncio.sleep(Clock.period(period))
+        while not task.is_shutdown:
+            try:
+                task.step(*args, **kwargs)
+            except StopTaskException:
+                return
+            yield from asyncio.sleep(task.period)
         # mark task as finished
         future.set_result(None)
 
@@ -49,7 +71,7 @@ class EventLoop(Shuttable, Thread):
         # ---
         self.loop.call_soon_threadsafe(self.loop.stop)
 
-    def add_task(self, func, every, *args, **kwargs):
+    def add_task(self, task: Task, *args, **kwargs):
         """this method should return a task object, that I
           can cancel, not a handle"""
 
@@ -60,7 +82,7 @@ class EventLoop(Shuttable, Thread):
             except Exception as e:
                 _future.set_exception(e)
 
-        coro = self._every(every, func, *args, **kwargs)
+        coro = self._every(task, *args, **kwargs)
         f = functools.partial(asyncio.ensure_future, coro, loop=self.loop)
         if current_thread() == self.tid:
             # We can call directly if we're not going between threads.
@@ -72,9 +94,7 @@ class EventLoop(Shuttable, Thread):
             # it's ready.
             fut = Future()
             self.loop.call_soon_threadsafe(_async_add, f, fut)
-            res = fut.result()
-            self._tasks.add(res)
-            return res
+            return fut.result()
 
     def cancel_task(self, task):
         self.loop.call_soon_threadsafe(task.cancel)

@@ -1,4 +1,4 @@
-import time
+from collections import defaultdict
 from threading import Thread, Semaphore
 from time import sleep
 from typing import Set, Dict, Type, Tuple, List
@@ -12,6 +12,8 @@ from .adapters.wifi import WifiAdapter
 from ..constants import ALLOW_DEVICE_TYPES
 from ..types import Shuttable
 from ..types.agent import AgentRole
+from ..types.misc import FlowWatch
+from ..types.network import NetworkDevice, NetworkDeviceType, NetworkDeviceState
 
 
 class NetworkManager(Shuttable, Thread):
@@ -28,13 +30,43 @@ class NetworkManager(Shuttable, Thread):
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
         self._inited: bool = False
+        # statistics
+        self._interface_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
+        self._channel_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
         # network APIs
         self._ip = IPRoute()
         self._iw = IW()
 
-    def _setup_new_adapter(self, device: NetworkDevice):
-        cls: Type[Adapter] = self._adapter_classes[device.type.value]
-        return cls(self._role, device)
+    @property
+    def link_statistics(self) -> Dict[str, Dict[str, float]]:
+        with self._lock:
+            return {
+                k: {
+                    "counter": vw.counter,
+                    "frequency": vw.frequency,
+                    "volume": vw.volume,
+                    "speed": vw.speed,
+                } for k, vw in self._interface_flowwatch.items()
+            }
+
+    @property
+    def channel_statistics(self) -> Dict[str, Dict[str, float]]:
+        with self._lock:
+            return {
+                k: {
+                    "counter": vw.counter,
+                    "frequency": vw.frequency,
+                    "volume": vw.volume,
+                    "speed": vw.speed,
+                } for k, vw in self._channel_flowwatch.items()
+            }
+
+    def reset_statistics(self):
+        with self._lock:
+            for flowwatch in self._interface_flowwatch.values():
+                flowwatch.reset()
+            for flowwatch in self._channel_flowwatch.values():
+                flowwatch.reset()
 
     def send(self, interface: str, channel: str, data: bytes):
         if interface not in self._adapters:
@@ -43,6 +75,9 @@ class NetworkManager(Shuttable, Thread):
                 return
         # ---
         self._adapters[interface].send(channel, data)
+        # measure data usage for both link and channel
+        self._interface_flowwatch[interface].signal(len(data))
+        self._channel_flowwatch[channel].signal(len(data))
 
     def run(self):
         ignored: Set[str] = set()
@@ -105,3 +140,7 @@ class NetworkManager(Shuttable, Thread):
         # ---
         # noinspection PyTypeChecker
         return list(devices.items())
+
+    def _setup_new_adapter(self, device: NetworkDevice):
+        cls: Type[Adapter] = self._adapter_classes[device.type.value]
+        return cls(self._role, device)

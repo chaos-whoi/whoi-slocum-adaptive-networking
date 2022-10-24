@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import List, Any, Dict, Optional, Iterator
 
+from ..time import Clock
 from ..types.misc import Reminder, GenericModel
 from ..types.problem import Problem, Channel
 
@@ -23,7 +24,7 @@ class SolvedChannel(GenericModel):
         self._reminder: Optional[Reminder] = None
         self._iterator = self._iface_iterator()
         if self.frequency > 0:
-            self._reminder = Reminder(frequency=self.frequency)
+            self._reminder = Reminder(period=Clock.period(1.0 / self.frequency))
 
     def _iface_iterator(self) -> Iterator[str]:
         cursor: int = 0

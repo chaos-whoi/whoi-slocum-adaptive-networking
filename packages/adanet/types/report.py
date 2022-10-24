@@ -42,7 +42,7 @@ class Report:
             Report._solution_counter += 1
         else:
             # create full dict container
-            d: Dict[str, Any] = {"t": t, **data}
+            d: Dict[str, Any] = {"t": t, **Report._flatten(data)}
 
         # commit
         to_commit: Optional[float] = None
@@ -57,10 +57,11 @@ class Report:
                 logger.commit(to_commit)
 
     @staticmethod
-    def _dictify(prefix: str, v: Union[Problem, Solution]) -> dict:
-        d: dict = {prefix: v.report()}
+    def _flatten(d: dict) -> dict:
         return {k: (v if not isinstance(v, FlatDict) else v.as_dict()) for k, v in
                 FlatDict(d, delimiter="/").items()}
 
-        # return d
-        # return flat_dict.encode(d, "/")
+    @staticmethod
+    def _dictify(prefix: str, v: Union[Problem, Solution]) -> dict:
+        d: dict = {prefix: v.report()}
+        return Report._flatten(d)

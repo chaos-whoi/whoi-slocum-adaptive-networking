@@ -11,6 +11,9 @@ class AbsDataPoint(ABC):
     def register_callback(self, callback: Callable[[bytes], None]):
         self._callbacks.add(callback)
 
+    def update(self, **kwargs):
+        pass
+
     def _on_data(self, data: bytes):
         for callback in self._callbacks:
             callback(data)

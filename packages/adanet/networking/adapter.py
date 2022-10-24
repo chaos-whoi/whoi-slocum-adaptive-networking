@@ -142,7 +142,8 @@ class Adapter(Shuttable, ABC):
 
     def send(self, channel: str, data: bytes):
         # TODO: implement this
-        print(f"SENDING {len(data)}B for '{channel}' through '{self.name}'")
+        # print(f"SENDING {len(data)}B for '{channel}' through '{self.name}'")
+        pass
 
     def update(self, device: NetworkDevice) -> None:
         """

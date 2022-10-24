@@ -28,6 +28,8 @@ class Engine(Shuttable, Thread):
                                                      simulation=simulator is not None)
 
     def start(self):
+        # reset clock
+        Clock.reset()
         if self._simulator:
             self._simulator.start()
         super(Engine, self).start()

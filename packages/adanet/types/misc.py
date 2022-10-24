@@ -60,7 +60,7 @@ class Shuttable:
                 sleep(nap_duration)
         except KeyboardInterrupt:
             print("Received a Keyboard Interrupt, exiting...")
-            Shuttable.shutdown_all()
+        Shuttable.shutdown_all()
 
     def mark_as_shutdown(self):
         self._is_shutdown = True
@@ -139,7 +139,7 @@ class FlowWatch:
         self._total: int = 0
         self._last_reset: float = Clock.time()
         self._last_signal: Optional[float] = None
-        # self._lock: Semaphore = Semaphore()
+        self._lock: Semaphore = Semaphore()
 
     @property
     def counter(self) -> int:
@@ -159,26 +159,25 @@ class FlowWatch:
         return s / min(self._size, self._counter)
 
     def reset(self):
-        # with self._lock:
-        self._counter = 0
-        self._total = 0
-        self._cursor = 0
-        self._diffs = [0] * self._size
-        self._last_reset: float = Clock.time()
+        with self._lock:
+            self._counter = 0
+            self._total = 0
+            self._cursor = 0
+            self._diffs = [0] * self._size
+            self._last_reset: float = Clock.time()
+            self._last_signal = None
 
     def signal(self, value: int):
-        print(f"> SIGNAL {value}")
-        # with self._lock:
-        if self._last_signal is None:
+        with self._lock:
+            if self._last_signal is None:
+                self._counter += 1
+                self._total += value
+                self._last_signal = Clock.time()
+                return
+            # compute diff
+            self._cursor = self._cursor % self._size
+            diff: float = Clock.time() - self._last_signal
+            self._diffs[self._cursor] = diff
             self._counter += 1
             self._total += value
             self._last_signal = Clock.time()
-            print(f"<< SIGNAL {value}")
-            return
-        # compute diff
-        diff: float = Clock.time() - self._last_signal
-        self._diffs[self._cursor] = diff
-        self._cursor += 1
-        self._counter += 1
-        self._total += value
-        print(f"< SIGNAL {value}")

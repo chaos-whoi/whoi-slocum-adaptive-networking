@@ -5,13 +5,23 @@ from typing import Optional
 
 import yaml
 
+from adanet.asyncio import loop, Task
 from adanet.engine import Engine
+from adanet.exceptions import StopTaskException
 from adanet.logger.wandb import WandBLogger
 from adanet.simulation import Simulator
 from adanet.solver import solvers
+from adanet.time import Clock
 from adanet.types.agent import AgentRole
 from adanet.types.problem import Problem
 from adanet.types.report import Report
+
+
+def duration_monitor(engine: Engine, duration: float, stime: float):
+    if (Clock.relative_time() - stime) >= Clock.period(duration):
+        print(f"Reached limit duration of {duration} secs, shutting down...")
+        engine.shutdown()
+        raise StopTaskException()
 
 
 def main():
@@ -22,12 +32,18 @@ def main():
                         help="Name of the class to instantiate the solver from")
     parser.add_argument("-p", "--problem", required=True, type=str,
                         help="Path to a problem definition file")
+    parser.add_argument("-d", "--duration", type=float, default=None,
+                        help="Duration of the run, program will end once the duration is reached")
     parser.add_argument("-S", "--simulation", default=False, action="store_true",
                         help="Simulate problem")
     parser.add_argument("-l", "--logger", required=False, type=str, default=None,
                         choices=["wb"],
                         help="Logger to attach to the engine")
     parsed = parser.parse_args()
+
+    # check duration value
+    if parsed.duration is not None and parsed.duration <= 2:
+        print("FATAL: duration cannot be less than 2 seconds")
 
     # instantiate agent
     role: AgentRole = AgentRole(parsed.role)
@@ -68,6 +84,11 @@ def main():
               f"\tproblem: {problem_fpath}\n")
         engine = Engine(role=role, solver=solver, problem=problem, simulator=simulator)
         engine.start()
+
+        # create duration monitor (if needed)
+        if parsed.duration is not None:
+            monitor: Task = Task(0.1, target=duration_monitor)
+            loop.add_task(monitor, engine, parsed.duration, Clock.relative_time())
 
         # wait for the engine to finish
         engine.join()

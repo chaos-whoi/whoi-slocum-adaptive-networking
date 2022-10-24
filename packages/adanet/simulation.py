@@ -1,12 +1,19 @@
 from time import sleep
 import math as mathlib
 from threading import Thread, Semaphore
-from typing import Dict
+from typing import Dict, Union
 
 from adanet.constants import FORMULATE_PROBLEM_EVERY_SEC
 from adanet.time import Clock
 from adanet.types import Shuttable
 from adanet.types.problem import Problem, Channel, SimulatedChannel, SimulatedLink, Link
+
+
+def step(period: Union[int, float], t: Union[int, float]):
+    value: float = 1.0
+    if (t // period) % 2 != 0:
+        value = 0.0
+    return value
 
 
 class Simulator(Shuttable, Thread):

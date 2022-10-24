@@ -4,3 +4,7 @@ class InterfaceNotFoundError(Exception):
 
 class InvalidStateError(Exception):
     pass
+
+
+class StopTaskException(Exception):
+    pass
