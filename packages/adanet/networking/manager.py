@@ -1,9 +1,8 @@
 import time
 from threading import Thread, Semaphore
-from typing import Set, Dict, Type, Tuple, List, Iterable
+from time import sleep
+from typing import Set, Dict, Type, Tuple, List
 
-# import nmcli
-from pydantic.networks import NetworkType
 from pyroute2 import IPRoute, IW
 
 from . import Adapter
@@ -12,12 +11,10 @@ from .adapters.ppp import PPPAdapter
 from .adapters.wifi import WifiAdapter
 from ..constants import ALLOW_DEVICE_TYPES
 from ..types import Shuttable
-from ..types.network import NetworkDevice, NetworkDeviceType, NetworkDeviceState
 from ..types.agent import AgentRole
 
 
 class NetworkManager(Shuttable, Thread):
-
     _adapter_classes = {
         "wifi": WifiAdapter,
         "veth": EthernetAdapter,
@@ -44,6 +41,7 @@ class NetworkManager(Shuttable, Thread):
             if self._inited:
                 print(f"ERROR: Unknown interface '{interface}'")
                 return
+        # ---
         self._adapters[interface].send(channel, data)
 
     def run(self):
@@ -89,7 +87,8 @@ class NetworkManager(Shuttable, Thread):
             for adapter in new_adapters:
                 adapter.start()
             self._inited = True
-            time.sleep(4)
+            # TODO: use a constant here
+            sleep(4)
 
     def get_devices(self) -> List[Tuple[str, str]]:
         devices: Dict[str, str] = {}

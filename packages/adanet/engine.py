@@ -1,4 +1,4 @@
-import time
+from time import sleep
 from threading import Thread
 from typing import Type, Optional
 
@@ -43,22 +43,22 @@ class Engine(Shuttable, Thread):
         return self._problem
 
     def _solve_problem(self) -> Solution:
-        stime = time.time()
+        stime = Clock.true_time()
         solution = self._solver.solve(self._problem)
-        ftime = time.time()
+        ftime = Clock.true_time()
         print(f" solved in {ftime - stime:.2f} secs")
         return solution
 
     def run(self):
-        stime: float = time.time()
+        stime: float = Clock.time()
         solution: Optional[Solution] = None
         # ---
         while not self.is_shutdown:
             # is it time for a new problem?
-            if time.time() - stime >= FORMULATE_PROBLEM_EVERY_SEC:
+            if Clock.time() - stime >= FORMULATE_PROBLEM_EVERY_SEC:
                 print("Formulating new problem...")
                 solution = None
-                stime = time.time()
+                stime = Clock.time()
             # solve problem (if needed)
             if solution is None:
                 self._problem = self._formulate_new_problem()
@@ -73,7 +73,7 @@ class Engine(Shuttable, Thread):
                 # inform the switchboard of a new solution
                 self._switchboard.update_solution(solution)
             # let the switchbox do its job
-            time.sleep(Clock.period(0.1))
+            sleep(Clock.period(0.1))
         # stop simulator (if any)
         if self._simulator:
             self._simulator.shutdown()

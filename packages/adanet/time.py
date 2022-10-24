@@ -23,3 +23,7 @@ class Clock:
     @staticmethod
     def relative_time() -> float:
         return Clock.time() - _stime
+
+    @staticmethod
+    def true_time() -> float:
+        return time.time()

@@ -1,13 +1,15 @@
 import json
-import time
+from threading import Semaphore
+from time import sleep
 from abc import abstractmethod
 from collections import Callable, defaultdict
-from typing import Set, Dict
+from typing import Set, Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel
 
 from ..exceptions import InvalidStateError
+from ..time import Clock
 
 
 class GenericModel(BaseModel):
@@ -55,7 +57,7 @@ class Shuttable:
         """
         try:
             while not self.is_shutdown:
-                time.sleep(nap_duration)
+                sleep(nap_duration)
         except KeyboardInterrupt:
             print("Received a Keyboard Interrupt, exiting...")
             Shuttable.shutdown_all()
@@ -83,10 +85,10 @@ class Reminder:
 
     def __init__(self, period=None, frequency=None):
         self._period = Reminder._get_period(period, frequency)
-        self._last_execution = time.time()
+        self._last_execution = Clock.time()
 
     def reset(self):
-        self._last_execution = time.time()
+        self._last_execution = Clock.time()
 
     def is_time(self, period=None, frequency=None, dry_run=False):
         _period = self._period
@@ -94,7 +96,7 @@ class Reminder:
         if period is not None or frequency is not None:
             _period = Reminder._get_period(period, frequency)
         # ---
-        _is_time = (time.time() - self._last_execution) >= _period
+        _is_time = (Clock.time() - self._last_execution) >= _period
         if _is_time and not dry_run:
             self.reset()
         return _is_time
@@ -125,3 +127,58 @@ class Reminder:
             _period = 1.0 / frequency
         # ---
         return _period
+
+
+class FlowWatch:
+
+    def __init__(self, size: int = 5):
+        self._size: int = size
+        self._diffs: List[float] = [0] * size
+        self._cursor: int = 0
+        self._counter: int = 0
+        self._total: int = 0
+        self._last_reset: float = Clock.time()
+        self._last_signal: Optional[float] = None
+        # self._lock: Semaphore = Semaphore()
+
+    @property
+    def counter(self) -> int:
+        return self._counter
+
+    @property
+    def volume(self) -> int:
+        return self._total
+
+    @property
+    def speed(self) -> float:
+        return self._total / (Clock.time() - self._last_reset)
+
+    @property
+    def frequency(self) -> float:
+        s: float = sum(self._diffs)
+        return s / min(self._size, self._counter)
+
+    def reset(self):
+        # with self._lock:
+        self._counter = 0
+        self._total = 0
+        self._cursor = 0
+        self._diffs = [0] * self._size
+        self._last_reset: float = Clock.time()
+
+    def signal(self, value: int):
+        print(f"> SIGNAL {value}")
+        # with self._lock:
+        if self._last_signal is None:
+            self._counter += 1
+            self._total += value
+            self._last_signal = Clock.time()
+            print(f"<< SIGNAL {value}")
+            return
+        # compute diff
+        diff: float = Clock.time() - self._last_signal
+        self._diffs[self._cursor] = diff
+        self._cursor += 1
+        self._counter += 1
+        self._total += value
+        print(f"< SIGNAL {value}")

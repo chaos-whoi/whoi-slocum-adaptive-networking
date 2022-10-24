@@ -5,6 +5,7 @@ from concurrent.futures import Future
 from threading import Thread, current_thread, Event
 from typing import Optional, Set
 
+from adanet.time import Clock
 from adanet.types import Shuttable
 
 
@@ -27,7 +28,7 @@ class EventLoop(Shuttable, Thread):
         # execute until shutdown
         while not task_switch.is_shutdown:
             func(*args, **kwargs)
-            yield from asyncio.sleep(period)
+            yield from asyncio.sleep(Clock.period(period))
         # mark task as finished
         future.set_result(None)
 

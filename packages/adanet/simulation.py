@@ -1,4 +1,4 @@
-import time
+from time import sleep
 import math as mathlib
 from threading import Thread, Semaphore
 from typing import Dict
@@ -70,8 +70,8 @@ class Simulator(Shuttable, Thread):
                     update: Dict[str, float] = self._update_channel(channel, simulation)
                     self._channel_update[channel.name] = update
             # ---
-            # we formulate 10 problems every FORMULATE_PROBLEM_EVERY_SEC
-            time.sleep(Clock.period(0.1 * FORMULATE_PROBLEM_EVERY_SEC))
+            # we run 10 simulation steps every FORMULATE_PROBLEM_EVERY_SEC
+            sleep(Clock.period(0.1 * FORMULATE_PROBLEM_EVERY_SEC))
 
     @staticmethod
     def _update_channel(channel: Channel, simulation: SimulatedChannel) -> Dict[str, float]:

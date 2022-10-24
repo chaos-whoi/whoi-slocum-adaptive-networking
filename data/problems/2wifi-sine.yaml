@@ -21,6 +21,6 @@ simulation:
 #          frequency: "abs(math.sin(0.02 * t))"
     links:
         - interface: "ppp0"
-          bandwidth: "128 * abs(math.sin(0.02 * t))"
+          bandwidth: "128 * abs(math.sin(0.1 * t))"
         - interface: "ppp1"
-          bandwidth: "128 * abs(math.cos(0.02 * t))"
+          bandwidth: "128 * abs(math.cos(0.1 * t))"

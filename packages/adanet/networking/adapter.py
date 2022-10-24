@@ -1,4 +1,4 @@
-import time
+from time import sleep
 import traceback
 import uuid
 from abc import ABC, abstractmethod
@@ -16,6 +16,7 @@ from ..constants import \
     IFACE_LATENCY_CHECK_EVERY_SECS, \
     ZERO, IFACE_BANDWIDTH_OPTIMISM, IFACE_MIN_BANDWIDTH_BYTES_SEC, DEBUG
 from ..exceptions import InterfaceNotFoundError
+from ..time import Clock
 from ..types import Shuttable
 from ..types.network import NetworkDevice
 from ..types.agent import AgentRole
@@ -307,15 +308,15 @@ class IAdapterWorker(Thread, Shuttable):
     def run(self) -> None:
         last: float = 0.0
         while not self.is_shutdown:
-            is_time = time.time() - last > self._period
+            is_time = Clock.time() - last > self._period
             if is_time:
-                last = time.time()
+                last = Clock.time()
                 # noinspection PyBroadException
                 try:
                     self._step()
                 except Exception:
                     print(traceback.format_exc())
-            time.sleep(0.1)
+            sleep(Clock.period(0.1))
 
 
 class AdapterBandwidthWorker(IAdapterWorker):
@@ -352,12 +353,15 @@ class AdapterBandwidthWorker(IAdapterWorker):
         # first time reading?
         if self._bytes == 0.0:
             self._bytes = used_overall
-            self._last = time.time()
+            self._last = Clock.time()
             return
         # compute used bandwidth
         used_since: float = used_overall - self._bytes
-        bw_since: float = used_since / (time.time() - self._last)
+        bw_since: float = used_since / (Clock.time() - self._last)
         self._set_bandwidth(bw_since)
+        # move cursors
+        self._last = Clock.time()
+        self._bytes = used_overall
 
 
 class AdapterLatencyWorker(IAdapterWorker):
