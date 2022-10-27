@@ -31,6 +31,7 @@ class Switchboard(Shuttable):
     def __init__(self, role: AgentRole, problem: Problem, simulation: bool = False):
         super(Switchboard, self).__init__()
         self._problem: Problem = problem
+        self._simulation: bool = simulation
         self._network_manager: NetworkManager = NetworkManager(role)
         self._solution: Optional[Solution] = None
         self._channels: Dict[str, SolvedChannel] = {}
@@ -39,7 +40,7 @@ class Switchboard(Shuttable):
         # start network manager
         self._network_manager.start()
         # choose between simulated and real data sources
-        if simulation:
+        if self._simulation:
             from adanet.pipes.simulated import SimulatedDataSource as DataSource
         else:
             from adanet.pipes.ros import ROSDataSource as DataSource
@@ -50,7 +51,7 @@ class Switchboard(Shuttable):
             source.register_callback(partial(self._on_recv, channel.name))
             self._sources[channel.name] = source
         # activate network monitor
-        task: Task = NetworkMonitorTask(period=Clock.period(1.0))
+        task: Task = NetworkMonitorTask(period=Clock.period(2.0))
         loop.add_task(task, self._network_manager)
 
     def update_solution(self, solution: Solution):
@@ -59,8 +60,15 @@ class Switchboard(Shuttable):
             self._channels = {
                 c.name: c for c in solution.assignments
             }
-            for c in solution.assignments:
-                self._sources[c.name].update(frequency=c.frequency)
+            # if we are simulating the problem, update the sources' frequency
+            if self._simulation:
+                # TODO: the idea here is that simulated sources can be throttled to the actual
+                #       solution frequency given that the data is fake. Also, this would reduce
+                #       the pressure on asyncio eventloop sleep
+                # for c in solution.assignments:
+                #     self._sources[c.name].update(frequency=c.frequency)
+                # TODO:
+                pass
 
     def _on_recv(self, channel: str, data: bytes):
         with self._lock:
@@ -72,7 +80,6 @@ class Switchboard(Shuttable):
         # find next interface for this channel according to the current solution
         interface: Optional[str] = solved_channel.next()
         if interface is None:
-            print(f"Packet from {channel} was dropped due to lack of interface, over-frequency?")
             return
         # send data through interface
         self._network_manager.send(interface, channel, data)

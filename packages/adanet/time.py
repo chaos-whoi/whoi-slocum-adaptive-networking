@@ -11,16 +11,24 @@ class Clock:
         Clock._stime = time.time()
 
     @staticmethod
-    def _correct_time(t: float) -> float:
+    def _to_simulated_time(t: float) -> float:
         return Clock._stime + (t - Clock._stime) * Clock._correction
+
+    @staticmethod
+    def _to_real_time(t: float) -> float:
+        return Clock._stime + (t - Clock._stime) / Clock._correction
 
     @staticmethod
     def period(t: float) -> float:
         return t / Clock._correction
 
     @staticmethod
+    def real_period(t: float) -> float:
+        return t * Clock._correction
+
+    @staticmethod
     def time() -> float:
-        return Clock._correct_time(time.time())
+        return Clock._to_simulated_time(time.time())
 
     @staticmethod
     def relative_time() -> float:

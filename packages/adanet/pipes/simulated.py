@@ -13,6 +13,11 @@ class SimulatedDataSource(AbsDataSource):
         self._buffer = b"x" * size
         # simulate a publisher at the given frequency
         period: float = Clock.period(1.0 / frequency)
+        # DEBUG:
+        # print(f"FREQUENCY[real]: {frequency}, FREQUENCY[sim]: {1.0 / period}, "
+        #       f"PERIOD[real]: {1.0 / frequency}, PERIOD[sim]: {period}")
+        # self._stime = Clock.time()
+        # DEBUG:
         self._task: Task = Task(period, self._on_data)
         loop.add_task(self._task, self._buffer)
 
@@ -21,6 +26,10 @@ class SimulatedDataSource(AbsDataSource):
             self._task.period = Clock.period(1.0 / frequency)
 
     def _on_data(self, data: bytes):
+        # DEBUG:
+        # print(f"PUBLISH AT {1.0 / Clock.real_period(Clock.time() - self._stime)}")
+        # self._stime = Clock.time()
+        # DEBUG:
         super(SimulatedDataSource, self)._on_data(data)
 
 

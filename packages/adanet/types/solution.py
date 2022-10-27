@@ -29,12 +29,28 @@ class SolvedChannel(GenericModel):
     def _iface_iterator(self) -> Iterator[str]:
         cursor: int = 0
         if len(self.interfaces) > 0:
+            # DEBUG:
+            # stime1 = Clock.time()
+            # stime2 = Clock.time()
+            # DEBUG:
             while True:
+                # DEBUG:
+                # print("IS_TIME[?]: ", Clock.time() - stime1,
+                #       Clock.real_period(Clock.time() - stime1),
+                #       1.0 / Clock.real_period(Clock.time() - stime1))
+                # stime1 = Clock.time()
+                # DEBUG:
                 if cursor >= len(self.interfaces):
                     cursor = 0
                 if not self._is_time():
                     yield None
                     continue
+                # DEBUG:
+                # print("IS_TIME[V]: ", Clock.time() - stime2,
+                #       Clock.real_period(Clock.time() - stime2),
+                #       1.0 / Clock.real_period(Clock.time() - stime2))
+                # stime2 = Clock.time()
+                # DEBUG:
                 yield self.interfaces[cursor]
                 cursor += 1
 

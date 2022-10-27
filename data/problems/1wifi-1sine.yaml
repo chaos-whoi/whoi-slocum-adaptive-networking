@@ -1,0 +1,14 @@
+links:
+    - interface: ppp0
+      bandwidth: 512
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 12.0
+#simulation:
+#    links:
+#        - interface: "ppp0"
+#          bandwidth: "128 * abs(math.sin(0.05 * t))"
