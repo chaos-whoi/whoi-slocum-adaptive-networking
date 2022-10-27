@@ -16,7 +16,7 @@ ZEROCONF_PREFIX = "_adanet._tcp.local."
 
 ALLOW_DEVICE_TYPES = os.environ.get("ALLOW_DEVICE_TYPES", "all").split(",")
 
-FORMULATE_PROBLEM_EVERY_SEC = 2
+FORMULATE_PROBLEM_EVERY_SEC = 5
 
 # reports
 REPORT_PRECISION_SEC = 0.5
@@ -24,3 +24,4 @@ REPORT_PRECISION_SEC = 0.5
 # weights and biases
 WANDB_API_KEY = "9c9f492d9419ea478dbd7540806190989e1d9877"
 WANDB_PROJECT = "test"
+WANDB_OFFLINE = os.environ.get("WANDB_OFFLINE", "0").lower() in ["1", "true", "yes"]
