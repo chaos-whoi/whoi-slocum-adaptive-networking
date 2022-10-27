@@ -27,6 +27,7 @@ class Link(GenericModel):
     # network flow properties
     bandwidth: Optional[float] = None
     latency: float = 0
+    reliability: float = 1.0
 
     # the overall budget in Bytes that this link can use
     budget: Optional[float] = None

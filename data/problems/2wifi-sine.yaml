@@ -3,6 +3,7 @@ links:
       bandwidth: 0
     - interface: ppp1
       bandwidth: 0
+      reliability: 1.0
 
 channels:
     - name: "/channel_1"
@@ -10,15 +11,14 @@ channels:
       size: 10
       qos:
           frequency: 15.0
+          reliability: 1.0
     - name: "/channel_2"
       frequency: 10.0
       size: 20
       qos:
           frequency: 10.0
+
 simulation:
-#    channels:
-#        - name: "/channel_2"
-#          frequency: "abs(math.sin(0.02 * t))"
     links:
         - interface: "ppp0"
           bandwidth: "128 * abs(math.sin(0.1 * t))"
