@@ -96,9 +96,11 @@ class Reminder:
         if period is not None or frequency is not None:
             _period = Reminder._get_period(period, frequency)
         # ---
-        _is_time = (Clock.time() - self._last_execution) >= _period
+        _since_last = Clock.time() - self._last_execution
+        _is_time = _since_last >= _period
         if _is_time and not dry_run:
-            self.reset()
+            _residual = _since_last - _period
+            self._last_execution = Clock.time() - _residual
         return _is_time
 
     @staticmethod
@@ -124,19 +126,20 @@ class Reminder:
                 raise ValueError('Parameter `frequency` must be a number, got {:s} instead'.format(
                     str(type(frequency))
                 ))
-            _period = 1.0 / frequency
+            _period = Clock.period(1.0 / frequency)
         # ---
         return _period
 
 
 class FlowWatch:
 
-    def __init__(self, size: int = 5):
+    def __init__(self, size: int = 20):
         self._size: int = size
         self._diffs: List[float] = [0] * size
         self._cursor: int = 0
         self._counter: int = 0
         self._total: int = 0
+        self._last_total: float = 0
         self._last_reset: float = Clock.time()
         self._last_signal: Optional[float] = None
         self._lock: Semaphore = Semaphore()
@@ -151,33 +154,45 @@ class FlowWatch:
 
     @property
     def speed(self) -> float:
-        return self._total / (Clock.time() - self._last_reset)
+        return (self._total - self._last_total) / Clock.real_period(Clock.time() - self._last_reset)
 
     @property
     def frequency(self) -> float:
+        # DEBUG:
+        # print(self._diffs,
+        #       [Clock.real_period(d) for d in self._diffs if d],
+        #       [1.0 / Clock.real_period(d) for d in self._diffs if d])
+        # DEBUG:
+        # trust the estimate at a percentage directly proportional to the amount of data we have
+        smooth: float = min(self._counter / (self._size * 0.5), 1.0)
         s: float = sum(self._diffs)
-        return s / min(self._size, self._counter)
+        t: float = Clock.real_period(s / min(self._size, self._counter))
+        f: float = (1.0 / t) * smooth if t else 0.0
+        return f
 
     def reset(self):
         with self._lock:
-            self._counter = 0
-            self._total = 0
-            self._cursor = 0
-            self._diffs = [0] * self._size
+            self._last_total: float = self._total
             self._last_reset: float = Clock.time()
-            self._last_signal = None
+            # self._total = 0
+            # self._counter = 0
+            # self._cursor = 0
+            # self._diffs = [0] * self._size
+            # self._last_signal = None
 
     def signal(self, value: int):
         with self._lock:
+            now: float = Clock.time()
             if self._last_signal is None:
                 self._counter += 1
                 self._total += value
-                self._last_signal = Clock.time()
+                self._last_signal = now
                 return
             # compute diff
             self._cursor = self._cursor % self._size
-            diff: float = Clock.time() - self._last_signal
+            diff: float = now - self._last_signal
             self._diffs[self._cursor] = diff
+            self._cursor += 1
             self._counter += 1
             self._total += value
-            self._last_signal = Clock.time()
+            self._last_signal = now
