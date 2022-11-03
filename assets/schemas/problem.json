@@ -22,7 +22,9 @@
                             "wifi-ax",
                             "wifi-6",
                             "ethernet",
-                            "acoustic"
+                            "acoustic",
+                            "iridium",
+                            "freewave"
                         ]
                     },
                     "bandwidth": {
@@ -46,6 +48,17 @@
                 "properties": {
                     "name": {
                         "type": "string"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "ros",
+                            "disk"
+                        ],
+                        "default": "ros"
+                    },
+                    "arguments": {
+                        "type": ["null", "object"]
                     },
                     "priority": {
                         "type": "integer",
