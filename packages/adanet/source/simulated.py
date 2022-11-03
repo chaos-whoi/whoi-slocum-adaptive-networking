@@ -1,14 +1,14 @@
 from typing import Optional
 
 from adanet.asyncio import loop, Task
-from adanet.pipes.base import AbsDataSource, AbsDataSink
+from adanet.source.base import ISource
 from adanet.time import Clock
 
 
-class SimulatedDataSource(AbsDataSource):
+class SimulatedSource(ISource):
 
     def __init__(self, size: int, frequency: float, *_, **__):
-        super(SimulatedDataSource, self).__init__(size=size)
+        super(SimulatedSource, self).__init__(size=size)
         self._frequency: float = frequency
         self._buffer = b"x" * size
         # simulate a publisher at the given frequency
@@ -30,11 +30,4 @@ class SimulatedDataSource(AbsDataSource):
         # print(f"PUBLISH AT {1.0 / Clock.real_period(Clock.time() - self._stime)}")
         # self._stime = Clock.time()
         # DEBUG:
-        super(SimulatedDataSource, self)._on_data(data)
-
-
-class SimulatedDataSink(AbsDataSink):
-
-    def __init__(self, frequency: float, size: int):
-        super(SimulatedDataSink, self).__init__(size=size)
-        self._frequency: float = frequency
+        super(SimulatedSource, self)._on_data(data)

@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from adanet.asyncio import loop, Task
 from adanet.networking.manager import NetworkManager
-from adanet.pipes.base import AbsDataSource
+from adanet.source.base import ISource
 from adanet.time import Clock
 from adanet.types import Shuttable
 from adanet.types.agent import AgentRole
@@ -35,18 +35,18 @@ class Switchboard(Shuttable):
         self._network_manager: NetworkManager = NetworkManager(role)
         self._solution: Optional[Solution] = None
         self._channels: Dict[str, SolvedChannel] = {}
-        self._sources: Dict[str, AbsDataSource] = {}
+        self._sources: Dict[str, ISource] = {}
         self._lock: Semaphore = Semaphore()
         # start network manager
         self._network_manager.start()
         # choose between simulated and real data sources
         if self._simulation:
-            from adanet.pipes.simulated import SimulatedDataSource as DataSource
+            from adanet.source.simulated import SimulatedSource as Source
         else:
-            from adanet.pipes.ros import ROSDataSource as DataSource
+            from adanet.source.ros import ROSSource as Source
         # instantiate data sources
         for channel in problem.channels:
-            source: AbsDataSource = DataSource(channel.size,
+            source: ISource = Source(channel.size,
                                                channel=channel.name, frequency=channel.frequency)
             source.register_callback(partial(self._on_recv, channel.name))
             self._sources[channel.name] = source
