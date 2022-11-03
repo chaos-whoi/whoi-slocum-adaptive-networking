@@ -25,3 +25,7 @@ REPORT_PRECISION_SEC = 0.5
 WANDB_API_KEY = "9c9f492d9419ea478dbd7540806190989e1d9877"
 WANDB_PROJECT = "test"
 WANDB_OFFLINE = os.environ.get("WANDB_OFFLINE", "0").lower() in ["1", "true", "yes"]
+
+# persist-queue
+QUEUE_PATH = os.environ.get("QUEUE_PATH", "/tmp/queue")
+os.makedirs(QUEUE_PATH)

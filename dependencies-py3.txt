@@ -30,3 +30,6 @@ wandb
 
 # flat dictionaries
 flatdict
+
+# persist-queue (https://github.com/peter-wangxu/persist-queue)
+persist-queue
