@@ -6,6 +6,7 @@ from typing import Optional
 import yaml
 
 from adanet.asyncio import loop, Task
+from adanet.constants import DEFAULT_SOLVER
 from adanet.engine import Engine
 from adanet.exceptions import StopTaskException
 from adanet.logger.wandb import WandBLogger
@@ -28,7 +29,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("role", type=str, choices=["robot", "ship"],
                         help="Role of this instance, either 'robot' or 'ship'")
-    parser.add_argument("-s", "--solver", required=True, type=str, choices=solvers.keys(),
+    parser.add_argument("-s", "--solver", required=False, type=str, choices=solvers.keys(),
+                        default=DEFAULT_SOLVER,
                         help="Name of the class to instantiate the solver from")
     parser.add_argument("-p", "--problem", required=True, type=str,
                         help="Path to a problem definition file")
@@ -36,8 +38,7 @@ def main():
                         help="Duration of the run, program will end once the duration is reached")
     parser.add_argument("-S", "--simulation", default=False, action="store_true",
                         help="Simulate problem")
-    parser.add_argument("-l", "--logger", required=False, type=str, default=None,
-                        choices=["wb"],
+    parser.add_argument("-l", "--logger", required=False, type=str, default=None, choices=["wb"],
                         help="Logger to attach to the engine")
     parsed = parser.parse_args()
 
@@ -67,6 +68,9 @@ def main():
         logger = WandBLogger()
         Report.attach_logger(logger)
 
+    # pointers
+    engine: Optional[Engine] = None
+
     # - robot agent
     if role is AgentRole.ROBOT:
         # create problem simulator (if needed)
@@ -90,8 +94,22 @@ def main():
             monitor: Task = Task(0.1, target=duration_monitor)
             loop.add_task(monitor, engine, parsed.duration, Clock.relative_time())
 
-        # wait for the engine to finish
-        engine.join()
+    # - ship agent
+    elif role is AgentRole.SHIP:
+        # spin up engine
+        print("Instantiating engine with:\n"
+              f"\trole: {role.name}\n"
+              f"\tproblem: {problem_fpath}\n")
+        engine = Engine(role=role, problem=problem)
+        engine.start()
+
+        # create duration monitor (if needed)
+        if parsed.duration is not None:
+            monitor: Task = Task(0.1, target=duration_monitor)
+            loop.add_task(monitor, engine, parsed.duration, Clock.relative_time())
+
+    # wait for the engine to finish
+    engine.join()
 
 
 if __name__ == '__main__':

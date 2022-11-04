@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
 
     class AsyncRunner:
+
         def __init__(self) -> None:
             self.aiobrowser: Optional[AsyncServiceBrowser] = None
             self.aiozc: Optional[AsyncZeroconf] = None

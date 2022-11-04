@@ -1,4 +1,4 @@
-from adanet.source.base import ISource
+from .base import ISource
 
 
 class ROSSource(ISource):

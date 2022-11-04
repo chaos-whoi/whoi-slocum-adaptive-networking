@@ -1,9 +1,14 @@
 import os
+import uuid
 
 DEBUG = bool(os.environ.get("DEBUG", 0))
 
 ZERO = 0
 INFTY = 99999999999
+PROCESS_KEY = str(uuid.uuid4())
+
+# ports
+SERVER_PORT = 12345
 
 IFACE_BANDWIDTH_CHECK_EVERY_SECS = float(os.environ.get("IFACE_BANDWIDTH_CHECK_EVERY_SECS", 1.0))
 IFACE_LATENCY_CHECK_EVERY_SECS = float(os.environ.get("IFACE_LATENCY_CHECK_EVERY_SECS", 1.0))
@@ -17,6 +22,9 @@ ZEROCONF_PREFIX = "_adanet._tcp.local."
 ALLOW_DEVICE_TYPES = os.environ.get("ALLOW_DEVICE_TYPES", "all").split(",")
 
 FORMULATE_PROBLEM_EVERY_SEC = 5
+
+# solvers
+DEFAULT_SOLVER = "SimpleSolver"
 
 # reports
 REPORT_PRECISION_SEC = 0.5

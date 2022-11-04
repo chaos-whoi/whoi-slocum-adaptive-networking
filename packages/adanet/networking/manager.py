@@ -1,7 +1,7 @@
 from collections import defaultdict
 from threading import Thread, Semaphore
 from time import sleep
-from typing import Set, Dict, Type, Tuple, List
+from typing import Set, Dict, Type, Tuple, List, Callable, Optional
 
 from pyroute2 import IPRoute, IW
 
@@ -14,6 +14,7 @@ from ..types import Shuttable
 from ..types.agent import AgentRole
 from ..types.misc import FlowWatch
 from ..types.network import NetworkDevice, NetworkDeviceType, NetworkDeviceState
+from ..types.problem import Problem
 
 
 class NetworkManager(Shuttable, Thread):
@@ -23,13 +24,23 @@ class NetworkManager(Shuttable, Thread):
         "ppp": PPPAdapter,
     }
 
-    def __init__(self, role: AgentRole):
+    def __init__(self, role: AgentRole, problem: Problem):
         Shuttable.__init__(self)
         Thread.__init__(self, daemon=True)
         self._role: AgentRole = role
+        self._problem: Problem = problem
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
         self._inited: bool = False
+        # if a problem is given and the 'links' are populated, stick to those links
+        self._whitelisted_links: Optional[Set[str]] = None
+        if self._problem.links is not None:
+            self._whitelisted_links = set()
+            for link in self._problem.links:
+                self._whitelisted_links.add(link.interface)
+        self._ignored_links: Set[str] = set()
+        # callbacks
+        self._new_iface_cbs: Set[Callable] = set()
         # statistics
         self._interface_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
         self._channel_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
@@ -67,6 +78,10 @@ class NetworkManager(Shuttable, Thread):
                 flowwatch.reset()
             for flowwatch in self._channel_flowwatch.values():
                 flowwatch.reset()
+
+    def on_new_interface(self, callback: Callable[[Adapter], None]):
+        with self._lock:
+            self._new_iface_cbs.add(callback)
 
     def send(self, interface: str, channel: str, data: bytes):
         if interface not in self._adapters:
@@ -121,6 +136,11 @@ class NetworkManager(Shuttable, Thread):
             # activate new adapters
             for adapter in new_adapters:
                 adapter.start()
+            # notify the presence of this new interface
+            for adapter in new_adapters:
+                for cb in self._new_iface_cbs:
+                    cb(adapter)
+            # mark as inited
             self._inited = True
             # TODO: use a constant here
             sleep(4)
@@ -137,6 +157,18 @@ class NetworkManager(Shuttable, Thread):
             if link is not None:
                 link = link.get_attr('IFLA_INFO_KIND')
                 devices[name] = link
+        # if a problem is given and the 'links' are populated, stick to those links
+        if self._whitelisted_links is not None:
+            for device in list(devices.keys()):
+                if device not in self._whitelisted_links:
+                    # print out (only once) that we are ignoring this link
+                    if device not in self._ignored_links:
+                        print(f"Interface '{device}' of type '{devices[device]}' is not listed in "
+                              f"the problem definition, it will not be used.")
+                        # mark this device as 'ignored'
+                        self._ignored_links.add(device)
+                    # remove device from list
+                    del devices[device]
         # ---
         # noinspection PyTypeChecker
         return list(devices.items())

@@ -1,5 +1,5 @@
 import re
-from typing import List, Iterable, TypeVar, Iterator
+from typing import List, Iterable, TypeVar, Iterator, Union
 
 size_units: List[str] = ["", "k", "m", "g", "t", "p", "e", "z"]
 time_units: List[str] = ["", "m", "n", "p"]
@@ -119,3 +119,7 @@ def find_shortest_whole_repetitive_pattern(sequence: List[str]) -> List[str]:
 def indent_block(s: str, indent: int = 4) -> str:
     space: str = " " * indent
     return space + f"\n{space}".join(s.splitlines())
+
+
+def utf8(s: Union[str, bytes]) -> str:
+    return s if isinstance(s, str) else s.decode("utf-8")

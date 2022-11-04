@@ -1,4 +1,4 @@
-from adanet.source.base import ISink
+from .base import ISink
 
 
 class ROSSink(ISink):

@@ -1,4 +1,4 @@
-from adanet.types.pipes import IPipe
+from ..types.pipes import IPipe
 
 
 class ISink(IPipe):

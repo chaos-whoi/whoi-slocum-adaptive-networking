@@ -1,8 +1,8 @@
 from typing import Optional
 
-from adanet.asyncio import loop, Task
-from adanet.source.base import ISource
-from adanet.time import Clock
+from ..asyncio import loop, Task
+from ..time import Clock
+from .base import ISource
 
 
 class SimulatedSource(ISource):
