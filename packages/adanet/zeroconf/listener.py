@@ -1,10 +1,11 @@
 from collections import defaultdict
 from typing import Dict, Optional
 
-from zeroconf import ServiceStateChange, ServiceBrowser, IPVersion, ServiceInfo, Zeroconf
+from zeroconf import ServiceStateChange, ServiceBrowser, ServiceInfo, Zeroconf
 
+from . import zc
 from .services import NetworkPeerService
-from ..constants import ZEROCONF_PREFIX, SERVER_PORT, PROCESS_KEY
+from ..constants import ZEROCONF_PREFIX, PROCESS_KEY, ZMQ_SERVER_PORT
 from ..networking import Adapter
 from ..types import Shuttable
 from ..types.agent import AgentRole
@@ -17,14 +18,13 @@ class ZeroconfListener(Shuttable):
         super(ZeroconfListener, self).__init__()
         self._role: AgentRole = role
         self._services: Dict[str, Dict[str, ServiceInfo]] = defaultdict(dict)
-        self._zc: Zeroconf = Zeroconf(ip_version=IPVersion.V4Only)
         self._browser: Optional[ServiceBrowser] = None
 
     def start(self):
         # instantiate a service browser
         services = [ZEROCONF_PREFIX]
         handlers = [self._on_service_state_change]
-        self._browser = ServiceBrowser(self._zc, services, handlers=handlers)
+        self._browser = ServiceBrowser(zc, services, handlers=handlers)
         # register shutdown callback
         self.register_shutdown_callback(self.stop)
 
@@ -35,7 +35,7 @@ class ZeroconfListener(Shuttable):
         # DEBUG:
         # print(f"ZC: Advertising service:\n\n{indent_block(str(service))}\n")
         # DEBUG:
-        self._zc.register_service(service)
+        zc.register_service(service)
 
     def on_new_network_interface(self, adapter: Adapter):
         self.advertise(NetworkPeerService(
@@ -44,7 +44,7 @@ class ZeroconfListener(Shuttable):
             iface=adapter.name,
             address=adapter.ip_address or None,
             network=adapter.ip_network or None,
-            port=SERVER_PORT,
+            port=ZMQ_SERVER_PORT,
             payload={}
         ))
 

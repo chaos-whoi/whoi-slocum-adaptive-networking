@@ -7,7 +7,7 @@ from adanet.types.agent import AgentRole
 
 
 engine = Engine(
-    role=AgentRole.ROBOT,
+    role=AgentRole.SOURCE,
     solver=SimpleSolver,
     problem=problem
 )

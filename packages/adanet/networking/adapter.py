@@ -12,6 +12,7 @@ import psutil
 import zmq
 from pythonping import ping
 from pythonping.executor import Response
+from zeroconf import ServiceNameAlreadyRegistered, NonUniqueNameException
 
 from ..constants import \
     IFACE_BANDWIDTH_CHECK_EVERY_SECS, \
@@ -20,7 +21,7 @@ from ..constants import \
     IFACE_MIN_BANDWIDTH_BYTES_SEC, \
     DEBUG, \
     ZERO, \
-    INFTY
+    INFTY, ZMQ_SERVER_PORT
 from ..exceptions import InterfaceNotFoundError
 from ..time import Clock
 from ..types import Shuttable
@@ -47,6 +48,8 @@ class Adapter(Shuttable, ABC):
         self._bandwidth_in: float = 0.0
         self._bandwidth_out: float = 0.0
         self._latency: float = 0.0
+        self._port: int = ZMQ_SERVER_PORT
+        self._context: zmq.Context = zmq.Context()
         self._socket: Optional[zmq.Socket] = None
         self._device: NetworkDevice = device
         self._remote: Optional[IPv4Address] = remote
@@ -187,23 +190,36 @@ class Adapter(Shuttable, ABC):
         pass
 
     def connect(self):
-        context = zmq.Context()
-        self._socket = context.socket(zmq.PAIR)
-        port: int = 0
-        # role: server
-        if self._role is AgentRole.SHIP:
+        self._socket = self._context.socket(zmq.PAIR)
+        # role: sink (server)
+        if self._role is AgentRole.SINK:
             # noinspection PyUnresolvedReferences
-            port: int = self._socket.bind_to_random_port(f"tcp://{self.ip_address}")
-        # role: client
-        if self._role is AgentRole.ROBOT:
+            if self._port == 0:
+                address: str = f"tcp://{self.ip_address}"
+                print(f"Binding to random port on {address}...")
+                self._port = self._socket.bind_to_random_port(address)
+            else:
+                address: str = f"tcp://{self.ip_address}:{self._port}"
+                print(f"Binding to {address}...")
+                self._socket.bind(address)
+            print(f"Binded to {address}")
+        # role: source (client)
+        if self._role is AgentRole.SOURCE:
             server_ip = self._zeroconf_peer_srv.addresses[0]
             server_port = self._zeroconf_peer_srv.port
-            self._socket.connect(f"tcp://{server_ip}:{server_port}")
+            address: str = f"tcp://{server_ip}:{server_port}"
+            print(f"Connecting to {address}...")
+            self._socket.connect(address)
+            print(f"Connected to {address}")
         # advertise service over mDNS
         self._zeroconf_srv = NetworkPeerService(
-            self._role, self._key, self._iface, self.ip_address, self.ip_network, port
+            self._role, self._key, self._iface, self.ip_address, self.ip_network, self._port
         )
-        zc.register_service(self._zeroconf_srv)
+        try:
+            zc.register_service(self._zeroconf_srv)
+        except (ServiceNameAlreadyRegistered, NonUniqueNameException):
+            zc.update_service(self._zeroconf_srv)
+
 
     @property
     def bandwidth_in(self) -> float:
@@ -252,9 +268,9 @@ class Adapter(Shuttable, ABC):
         Updates the internal state given a new network device
         """
         self._connected = connected
-        # TODO: re-enable this
-        # if self._socket is None:
-        #     self.connect()
+        # TODO: what if the interface goes away and then comes back?
+        if self._socket is None:
+            self.connect()
 
     @property
     def estimated_bandwidth_in(self) -> float:
@@ -346,18 +362,24 @@ class AdapterBandwidthWorker(IAdapterWorker):
             self._set_bandwidth(ZERO)
             return
         # read net usage
+        now: float = Clock.time()
         used_overall: float = getattr(net_usage[self._adapter.name], self._snetio_field)
+
+        # DEBUG:
+        # print(net_usage[self._adapter.name])
+        # DEBUG:
+
         # first time reading?
         if self._bytes == 0.0:
             self._bytes = used_overall
-            self._last = Clock.time()
+            self._last = now
             return
         # compute used bandwidth
         used_since: float = used_overall - self._bytes
-        bw_since: float = used_since / (Clock.time() - self._last)
+        bw_since: float = used_since / (now - self._last)
         self._set_bandwidth(bw_since)
         # move cursors
-        self._last = Clock.time()
+        self._last = now
         self._bytes = used_overall
 
 

@@ -27,7 +27,7 @@ class Engine(Shuttable, Thread):
         self._role: AgentRole = role
         self._solver: Optional[AbsSolver] = None
         # - ROBOT mode
-        if role is AgentRole.ROBOT:
+        if role is AgentRole.SOURCE:
             # make sure a solver is given when running in ROBOT mode
             if solver is None:
                 raise ValueError("A 'solver' is required when 'role=ROBOT'")
@@ -93,7 +93,7 @@ class Engine(Shuttable, Thread):
         # ---
         while not self.is_shutdown:
             # - ROBOT mode
-            if self._role is AgentRole.ROBOT:
+            if self._role is AgentRole.SOURCE:
                 # is it time for a new problem?
                 if Clock.time() - stime >= FORMULATE_PROBLEM_EVERY_SEC:
                     print("Formulating new problem...")

@@ -27,8 +27,8 @@ def duration_monitor(engine: Engine, duration: float, stime: float):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("role", type=str, choices=["robot", "ship"],
-                        help="Role of this instance, either 'robot' or 'ship'")
+    parser.add_argument("role", type=str, choices=["source", "sink"],
+                        help="Role of this instance")
     parser.add_argument("-s", "--solver", required=False, type=str, choices=solvers.keys(),
                         default=DEFAULT_SOLVER,
                         help="Name of the class to instantiate the solver from")
@@ -71,8 +71,8 @@ def main():
     # pointers
     engine: Optional[Engine] = None
 
-    # - robot agent
-    if role is AgentRole.ROBOT:
+    # - 'source' agent
+    if role is AgentRole.SOURCE:
         # create problem simulator (if needed)
         simulator: Optional[Simulator] = None
         if parsed.simulation:
@@ -94,8 +94,8 @@ def main():
             monitor: Task = Task(0.1, target=duration_monitor)
             loop.add_task(monitor, engine, parsed.duration, Clock.relative_time())
 
-    # - ship agent
-    elif role is AgentRole.SHIP:
+    # - 'sink' agent
+    elif role is AgentRole.SINK:
         # spin up engine
         print("Instantiating engine with:\n"
               f"\trole: {role.name}\n"

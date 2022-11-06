@@ -31,7 +31,7 @@ engine.join()
 
 
 engine = Engine(
-    role=AgentRole.ROBOT,
+    role=AgentRole.SOURCE,
     solver=SimpleSolver,
     problem=problem
 )

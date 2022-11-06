@@ -59,20 +59,22 @@ class Switchboard(Shuttable):
         self._lock: Semaphore = Semaphore()
 
         # instantiate data sources
-        if self._role is AgentRole.ROBOT:
+        if self._role is AgentRole.SOURCE:
             for channel in problem.channels:
                 Source: Type[ISource] = self._source(channel)
                 source: ISource = Source(size=channel.size,
-                                         channel=channel.name, frequency=channel.frequency)
+                                         channel=channel.name,
+                                         frequency=channel.frequency)
                 source.register_callback(partial(self._on_recv, channel.name))
                 self._sources[channel.name] = source
 
         # instantiate data sinks
-        if self._role is AgentRole.SHIP:
+        if self._role is AgentRole.SINK:
             for channel in problem.channels:
                 Sink: Type[ISink] = self._sink(channel)
                 sink: ISink = Sink(size=channel.size,
-                                   channel=channel.name, frequency=channel.frequency)
+                                   channel=channel.name,
+                                   frequency=channel.frequency)
                 sink.register_callback(partial(self._on_recv, channel.name))
                 self._sinks[channel.name] = sink
 
