@@ -1,32 +1,38 @@
-from time import sleep
 import traceback
 import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
 from ipaddress import IPv4Network, IPv4Address
 from threading import Thread
-from typing import Optional, Dict
+from time import sleep
+from typing import Optional, Dict, Iterable
 
 import netifaces
 import psutil
 import zmq
+from pythonping import ping
+from pythonping.executor import Response
 
 from ..constants import \
     IFACE_BANDWIDTH_CHECK_EVERY_SECS, \
-    IFACE_LATENCY_CHECK_EVERY_SECS, \
-    ZERO, IFACE_BANDWIDTH_OPTIMISM, IFACE_MIN_BANDWIDTH_BYTES_SEC, DEBUG
+    IFACE_PING_CHECK_EVERY_SECS, \
+    IFACE_BANDWIDTH_OPTIMISM, \
+    IFACE_MIN_BANDWIDTH_BYTES_SEC, \
+    DEBUG, \
+    ZERO, \
+    INFTY
 from ..exceptions import InterfaceNotFoundError
 from ..time import Clock
 from ..types import Shuttable
-from ..types.network import NetworkDevice
 from ..types.agent import AgentRole
+from ..types.network import NetworkDevice
 from ..zeroconf import zc
 from ..zeroconf.services import NetworkPeerService
 
 
 class Adapter(Shuttable, ABC):
 
-    def __init__(self, role: AgentRole, device: NetworkDevice):
+    def __init__(self, role: AgentRole, device: NetworkDevice, remote: Optional[IPv4Address] = None):
         Shuttable.__init__(self)
         # make sure the interface exists
         iface: str = device.interface
@@ -36,11 +42,16 @@ class Adapter(Shuttable, ABC):
         self._iface: str = iface
         self._key: str = str(uuid.uuid4())
         # internal state
+        self._present: bool = True
+        self._connected: bool = False
         self._bandwidth_in: float = 0.0
         self._bandwidth_out: float = 0.0
         self._latency: float = 0.0
         self._socket: Optional[zmq.Socket] = None
-        self._nm_device: NetworkDevice = device
+        self._device: NetworkDevice = device
+        self._remote: Optional[IPv4Address] = remote
+        if self._remote:
+            print(f"Forcing interface '{device.interface}' to talk to remote IP {self._remote}")
         # zeroconf
         # TODO: this should be updated when IP changes or IP is assigned/removed
         # TODO: port here should be the one assigned by the kernel to the zmq socket
@@ -54,7 +65,7 @@ class Adapter(Shuttable, ABC):
         self._bandwidth_out_worker = AdapterBandwidthWorker(
             self, AdapterBandwidthWorker.BandwidthDirection.OUT
         )
-        self._latency_worker = AdapterLatencyWorker(self)
+        self._ping_worker = AdapterPingWorker(self)
         # debug
         if DEBUG:
             self._debug_worker = AdapterDebugger(self)
@@ -67,6 +78,24 @@ class Adapter(Shuttable, ABC):
         :return: the name of the interface
         """
         return self._iface
+
+    @property
+    def device(self) -> NetworkDevice:
+        """
+        The underlying network device.
+
+        :return: the underlying network device
+        """
+        return self._device
+
+    @property
+    def remote(self) -> Optional[IPv4Address]:
+        """
+        The IP address of the remote counterpart.
+
+        :return: the IP address of the remote counterpart
+        """
+        return self._remote
 
     @property
     def ip_address(self) -> Optional[IPv4Address]:
@@ -107,7 +136,7 @@ class Adapter(Shuttable, ABC):
 
         :return: whether the interface is active
         """
-        return self._is_active()
+        return self._present
 
     @property
     def has_link(self) -> bool:
@@ -118,7 +147,7 @@ class Adapter(Shuttable, ABC):
 
         :return: whether the interface has a working link
         """
-        return self._has_link()
+        return self.ip_address is not None
 
     @property
     def is_connected(self) -> bool:
@@ -127,7 +156,7 @@ class Adapter(Shuttable, ABC):
 
         :return: whether the interface has a working link
         """
-        return self._has_link() and self._is_connected()
+        return self.has_link and self._connected
 
     def start(self):
         """
@@ -136,23 +165,26 @@ class Adapter(Shuttable, ABC):
         # start workers
         self._bandwidth_in_worker.start()
         self._bandwidth_out_worker.start()
-        self._latency_worker.start()
+        self._ping_worker.start()
         if DEBUG:
             self._debug_worker.start()
+
+    def lost(self):
+        """
+        Deactivate adapter workers and monitoring.
+        """
+        self._present = False
+        # TODO: implement this
+        # self._bandwidth_in_worker.start()
+        # self._bandwidth_out_worker.start()
+        # self._latency_worker.start()
+        # if DEBUG:
+        #     self._debug_worker.start()
 
     def send(self, channel: str, data: bytes):
         # TODO: implement this
         # print(f"SENDING {len(data)}B for '{channel}' through '{self.name}'")
         pass
-
-    def update(self, device: NetworkDevice) -> None:
-        """
-        Updates the internal state given a new network device object from the network manager.
-        """
-        self._update(device)
-        # TODO: re-enable this
-        # if self._socket is None:
-        #     self.connect()
 
     def connect(self):
         context = zmq.Context()
@@ -205,13 +237,32 @@ class Adapter(Shuttable, ABC):
         self._bandwidth_out = value
         return old
 
+    def set_latency(self, value: float) -> float:
+        """
+        Sets a new value for the interface latency. Returns the old value.
+        :param value: new value for latency
+        :return: old value for latency
+        """
+        old = self._latency
+        self._latency = value
+        return old
+
+    def set_connected(self, connected: bool):
+        """
+        Updates the internal state given a new network device
+        """
+        self._connected = connected
+        # TODO: re-enable this
+        # if self._socket is None:
+        #     self.connect()
+
     @property
     def estimated_bandwidth_in(self) -> float:
         """
         Estimates the current interface IN bandwidth.
         :return: estimated value for bandwidth in bytes/sec
         """
-        if (not self._is_active) or (not self.has_link):
+        if (not self.is_active) or (not self.has_link):
             return 0
         # TODO: here we should include the effect of missing transfers from last session to lower optimism and detect ceilings
         # TODO: we shouldn't react so quickly on the registered bandwidth, we should keep some memory of good sessions
@@ -224,72 +275,17 @@ class Adapter(Shuttable, ABC):
         Estimates the current interface OUT bandwidth.
         :return: estimated value for bandwidth in bytes/sec
         """
-        if (not self._is_active) or (not self.has_link):
+        if (not self.is_active) or (not self.has_link):
             return 0
         # TODO: here we should include the effect of missing transfers from last session to lower optimism and detect ceilings
         # TODO: we shouldn't react so quickly on the registered bandwidth, we should keep some memory of good sessions
         projection: float = 1 + IFACE_BANDWIDTH_OPTIMISM
         return max(IFACE_MIN_BANDWIDTH_BYTES_SEC, self._bandwidth_out * projection)
 
-    def set_latency(self, value: float) -> float:
-        """
-        Sets a new value for the interface latency. Returns the old value.
-        :param value: new value for latency
-        :return: old value for latency
-        """
-        old = self._latency
-        self._latency = value
-        return old
-
     def __del__(self):
         if hasattr(self, "_zeroconf_srv") and self._zeroconf_srv is not None:
             # de-register services
             zc.unregister_service(self._zeroconf_srv)
-
-    # abstract methods
-
-    @abstractmethod
-    def _is_active(self) -> bool:
-        """
-        Tells us whether interface is active and can be used IF it is connected.
-
-        :return: whether the interface is active
-        """
-        pass
-
-    @abstractmethod
-    def _has_link(self) -> bool:
-        """
-        Tells us whether the interface has an active link, e.g. cable plugged in, wifi handshake.
-        This does not mean that the interface is connected to the remote counterpart. Use
-        `is_connected` for that.
-
-        :return: whether the interface has a working link
-        """
-        pass
-
-    @abstractmethod
-    def _is_connected(self) -> bool:
-        """
-        Tells us whether the interface has an active connection to the remote counterpart.
-
-        :return: whether the interface has a working link
-        """
-        pass
-
-    @abstractmethod
-    def _update(self, device: NetworkDevice) -> None:
-        """
-        Updates the internal state given a new network device object from the network manager.
-        """
-        pass
-
-    @abstractmethod
-    def _setup(self) -> None:
-        """
-        Sets up the connection to the remote counterpart.
-        """
-        pass
 
 
 class IAdapterWorker(Thread, Shuttable):
@@ -365,17 +361,41 @@ class AdapterBandwidthWorker(IAdapterWorker):
         self._bytes = used_overall
 
 
-class AdapterLatencyWorker(IAdapterWorker):
+class AdapterPingWorker(IAdapterWorker):
 
     def __init__(self, adapter: Adapter):
-        super(AdapterLatencyWorker, self).__init__(
+        super(AdapterPingWorker, self).__init__(
             adapter,
-            frequency=IFACE_LATENCY_CHECK_EVERY_SECS,
+            frequency=IFACE_PING_CHECK_EVERY_SECS,
         )
 
     def _step(self):
-        # TODO: implement this
-        pass
+        # no link => no connection => no ping needed
+        if not self._adapter.has_link:
+            self._adapter.set_connected(False)
+            self._adapter.set_latency(INFTY)
+            self._adapter.set_bandwidth_in(0)
+            self._adapter.set_bandwidth_out(0)
+            return
+        # test for connection
+        server: Optional[IPv4Address] = self._adapter.remote
+        if server is not None:
+            responses: Iterable[Response] = ping(str(server), timeout=4, count=2, interval=0)
+
+            # DEBUG:
+            # print(responses)
+            # DEBUG:
+
+            successes: int = 0
+            latency: float = 0
+            for response in responses:
+                successes += int(response.success)
+                latency += response.time_elapsed
+            if successes > 0:
+                # we have at least one success => the adapter is connected
+                self._adapter.set_connected(True)
+                # compute average latency
+                self._adapter.set_latency(latency / successes)
 
 
 class AdapterDebugger(IAdapterWorker):

@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Optional, List, Callable
+from ipaddress import IPv4Address
+from typing import Optional, List, Callable, Dict
 
 from pydantic import validator
 
@@ -13,6 +14,11 @@ class LatencyPolicy(Enum):
     STRICT = "strict"
 
 
+class ChannelKind(Enum):
+    ROS = "ros"
+    DISK = "disk"
+
+
 class Link(GenericModel):
     class Config:
         extra = "allow"
@@ -23,6 +29,9 @@ class Link(GenericModel):
 
     # shortcut to defining bandwidth and latency
     type: Optional[str] = None
+
+    # optional static network configuration
+    server: Optional[IPv4Address] = None
 
     # network flow properties
     bandwidth: Optional[float] = None
@@ -108,6 +117,8 @@ class ChannelQoS(GenericModel):
 
 class Channel(GenericModel):
     name: str
+    kind: ChannelKind = ChannelKind.ROS
+    arguments: Optional[Dict] = {}
     priority: int = 0
     frequency: Optional[float] = None
     size: Optional[int] = None

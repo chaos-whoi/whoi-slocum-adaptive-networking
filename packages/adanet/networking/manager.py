@@ -1,4 +1,5 @@
 from collections import defaultdict
+from ipaddress import IPv4Address
 from threading import Thread, Semaphore
 from time import sleep
 from typing import Set, Dict, Type, Tuple, List, Callable, Optional
@@ -13,8 +14,8 @@ from ..constants import ALLOW_DEVICE_TYPES
 from ..types import Shuttable
 from ..types.agent import AgentRole
 from ..types.misc import FlowWatch
-from ..types.network import NetworkDevice, NetworkDeviceType, NetworkDeviceState
-from ..types.problem import Problem
+from ..types.network import NetworkDevice, NetworkDeviceType
+from ..types.problem import Problem, Link
 
 
 class NetworkManager(Shuttable, Thread):
@@ -32,6 +33,10 @@ class NetworkManager(Shuttable, Thread):
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
         self._inited: bool = False
+        # known links
+        self._known_links: Dict[str, Link] = {}
+        for link in problem.links:
+            self._known_links[link.interface] = link
         # if a problem is given and the 'links' are populated, stick to those links
         self._whitelisted_links: Optional[Set[str]] = None
         if self._problem.links is not None:
@@ -41,12 +46,17 @@ class NetworkManager(Shuttable, Thread):
         self._ignored_links: Set[str] = set()
         # callbacks
         self._new_iface_cbs: Set[Callable] = set()
+        self._lost_iface_cbs: Set[Callable] = set()
         # statistics
         self._interface_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
         self._channel_flowwatch: Dict[str, FlowWatch] = defaultdict(FlowWatch)
         # network APIs
         self._ip = IPRoute()
         self._iw = IW()
+
+    @property
+    def adapters(self) -> Set[Adapter]:
+        return set(self._adapters.values())
 
     @property
     def link_statistics(self) -> Dict[str, Dict[str, float]]:
@@ -83,6 +93,10 @@ class NetworkManager(Shuttable, Thread):
         with self._lock:
             self._new_iface_cbs.add(callback)
 
+    def on_interface_lost(self, callback: Callable[[Adapter], None]):
+        with self._lock:
+            self._lost_iface_cbs.add(callback)
+
     def send(self, interface: str, channel: str, data: bytes):
         if interface not in self._adapters:
             if self._inited:
@@ -98,6 +112,7 @@ class NetworkManager(Shuttable, Thread):
         ignored: Set[str] = set()
         while not self.is_shutdown:
             new_adapters: Set[Adapter] = set()
+            lost_adapters: Set[str] = set(self._adapters.keys())
             for dev, devt in self.get_devices():
                 # filter devices based on their type
                 if devt not in self._adapter_classes:
@@ -115,30 +130,32 @@ class NetworkManager(Shuttable, Thread):
                 with self._lock:
                     if dev not in self._adapters:
                         print(f"Attaching to device '{dev}' of type '{devt}'")
-
-                        # TODO: remove this
-                        # device = NetworkDevice.from_nmcli_output(dev_nmcli)
-
                         device = NetworkDevice(
                             interface=dev,
-                            type=NetworkDeviceType(devt),
-                            # TODO: figure this out some other way
-                            state=NetworkDeviceState.CONNECTED,
-                            # TODO: figure this out some other way
-                            connection=""
+                            type=NetworkDeviceType(devt)
                         )
-
                         adapter = self._setup_new_adapter(device)
                         self._adapters[dev] = adapter
                         new_adapters.add(adapter)
-                    else:
-                        self._adapters[dev].update(device)
+                    # mark as NOT lost
+                    if dev in lost_adapters:
+                        lost_adapters.remove(dev)
             # activate new adapters
             for adapter in new_adapters:
                 adapter.start()
-            # notify the presence of this new interface
+            # notify the presence of new adapters
             for adapter in new_adapters:
                 for cb in self._new_iface_cbs:
+                    cb(adapter)
+            # deactivate lost adapters
+            for dev in lost_adapters:
+                adapter = self._adapters[dev]
+                adapter.lost()
+            # notify the presence of new adapters
+            for dev in lost_adapters:
+                adapter = self._adapters[dev]
+                print(f"Detaching from device '{dev}' of type '{adapter.device.type.value}'")
+                for cb in self._lost_iface_cbs:
                     cb(adapter)
             # mark as inited
             self._inited = True
@@ -175,4 +192,6 @@ class NetworkManager(Shuttable, Thread):
 
     def _setup_new_adapter(self, device: NetworkDevice):
         cls: Type[Adapter] = self._adapter_classes[device.type.value]
-        return cls(self._role, device)
+        link: Optional[Link] = self._known_links.get(device.interface)
+        remote: Optional[IPv4Address] = link.server if link else None
+        return cls(role=self._role, device=device, remote=remote)

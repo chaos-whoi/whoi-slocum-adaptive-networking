@@ -4,7 +4,7 @@ from typing import Set, Callable
 
 class IPipe(ABC):
 
-    def __init__(self, size: int):
+    def __init__(self, size: int, *_, **__):
         self._size: int = size
         self._callbacks: Set[Callable[[bytes], None]] = set()
 

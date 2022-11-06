@@ -3,13 +3,14 @@ from threading import Thread
 from typing import Type, Optional
 
 from adanet.constants import FORMULATE_PROBLEM_EVERY_SEC
+from adanet.networking.manager import NetworkManager
 from adanet.simulation import Simulator
 from adanet.solver.base import AbsSolver
 from adanet.switchboard import Switchboard
 from adanet.time import Clock
 from adanet.types import Shuttable
 from adanet.types.agent import AgentRole
-from adanet.types.problem import Problem
+from adanet.types.problem import Problem, Link
 from adanet.types.report import Report
 from adanet.types.solution import Solution
 from adanet.utils import indent_block
@@ -35,15 +36,19 @@ class Engine(Shuttable, Thread):
         # ---
         self._problem: Problem = problem
         self._simulator: Optional[Simulator] = simulator
+        self._network_manager: NetworkManager = NetworkManager(role=role, problem=problem)
         self._switchboard: Switchboard = Switchboard(role=role, problem=problem,
+                                                     network_manager=self._network_manager,
                                                      simulation=simulator is not None)
         self._zeroconf: ZeroconfListener = ZeroconfListener(role)
         # tell the network manager to notify zeroconf of any new network interface
-        self._switchboard.network_manager.on_new_interface(self._zeroconf.on_new_network_interface)
+        self._network_manager.on_new_interface(self._zeroconf.on_new_network_interface)
 
     def start(self):
         # reset clock
         Clock.reset()
+        # start network manager
+        self._network_manager.start()
         # start switchboard
         self._switchboard.start()
         # start simulator
@@ -59,10 +64,21 @@ class Engine(Shuttable, Thread):
             # simulated problem
             return self._simulator.step()
         else:
-            # TODO: use the statistics collector to formulate a new problem
-            pass
-        # TODO: for now returns same problem again and again
-        return self._problem
+            # start from a copy of the old problem
+            problem: Problem = Problem(links=[], channels=self._problem.channels)
+            # add links to the problem
+            for adapter in self._network_manager.adapters:
+                # use the statistics collector to formulate a new problem
+                problem.links.append(Link(
+                    interface=adapter.device.interface,
+                    # TODO: perhaps we should use a combination of IN and OUT bandwidth
+                    bandwidth=adapter.bandwidth_out,
+                    latency=adapter.latency,
+                    # TODO: this is not used
+                    reliability=1.0,
+                ))
+            # ---
+            return problem
 
     def _solve_problem(self) -> Solution:
         stime = Clock.true_time()

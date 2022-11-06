@@ -33,3 +33,6 @@ flatdict
 
 # persist-queue (https://github.com/peter-wangxu/persist-queue)
 persist-queue
+
+# ping in python
+pythonping

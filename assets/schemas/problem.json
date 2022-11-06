@@ -27,6 +27,10 @@
                             "freewave"
                         ]
                     },
+                    "server": {
+                        "type": "string",
+                        "format": "ipv4"
+                    },
                     "bandwidth": {
                         "type": ["string", "number"]
                     },
