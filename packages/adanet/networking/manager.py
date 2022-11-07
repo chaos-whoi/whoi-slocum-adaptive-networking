@@ -10,15 +10,19 @@ from . import Adapter
 from .adapters.ethernet import EthernetAdapter
 from .adapters.ppp import PPPAdapter
 from .adapters.wifi import WifiAdapter
-from ..constants import ALLOW_DEVICE_TYPES
+from ..asyncio import Task, loop
+from ..constants import ALLOW_DEVICE_TYPES, NETWORK_LOG_EVERY_SECS
+from ..time import Clock
 from ..types import Shuttable
 from ..types.agent import AgentRole
+from ..types.message import Message
 from ..types.misc import FlowWatch
-from ..types.network import NetworkDevice, NetworkDeviceType
+from ..types.network import NetworkDevice, NetworkDeviceType, INetworkManager, ISwitchboard
 from ..types.problem import Problem, Link
+from ..types.report import Report
 
 
-class NetworkManager(Shuttable, Thread):
+class NetworkManager(Shuttable, INetworkManager, Thread):
     _adapter_classes = {
         "wifi": WifiAdapter,
         "veth": EthernetAdapter,
@@ -30,6 +34,7 @@ class NetworkManager(Shuttable, Thread):
         Thread.__init__(self, daemon=True)
         self._role: AgentRole = role
         self._problem: Problem = problem
+        self._switchboard: Optional[ISwitchboard] = None
         self._lock: Semaphore = Semaphore()
         self._adapters: Dict[str, Adapter] = {}
         self._inited: bool = False
@@ -53,6 +58,16 @@ class NetworkManager(Shuttable, Thread):
         # network APIs
         self._ip = IPRoute()
         self._iw = IW()
+        # create network monitor task
+        self._monitor_task: Task = NetworkMonitorTask(period=Clock.period(NETWORK_LOG_EVERY_SECS))
+
+    @property
+    def switchboard(self) -> ISwitchboard:
+        return self._switchboard
+
+    @switchboard.setter
+    def switchboard(self, switchboard: ISwitchboard):
+        self._switchboard = switchboard
 
     @property
     def adapters(self) -> Set[Adapter]:
@@ -97,16 +112,26 @@ class NetworkManager(Shuttable, Thread):
         with self._lock:
             self._lost_iface_cbs.add(callback)
 
-    def send(self, interface: str, channel: str, data: bytes):
+    def send(self, interface: str, message: Message):
         if interface not in self._adapters:
             if self._inited:
                 print(f"ERROR: Unknown interface '{interface}'")
                 return
-        # ---
-        self._adapters[interface].send(channel, data)
+        # send data down to the adapter
+        self._adapters[interface].send(message)
         # measure data usage for both link and channel
-        self._interface_flowwatch[interface].signal(len(data))
-        self._channel_flowwatch[channel].signal(len(data))
+        self._interface_flowwatch[interface].signal(len(message.payload))
+        self._channel_flowwatch[message.channel].signal(len(message.payload))
+
+    def recv(self, interface: str, message: Message):
+        # send data up to the switchboard
+        self._switchboard.recv(message)
+
+    def start(self) -> None:
+        # activate network monitor
+        loop.add_task(self._monitor_task, self)
+        # run this thread
+        super(NetworkManager, self).start()
 
     def run(self):
         ignored: Set[str] = set()
@@ -194,4 +219,19 @@ class NetworkManager(Shuttable, Thread):
         cls: Type[Adapter] = self._adapter_classes[device.type.value]
         link: Optional[Link] = self._known_links.get(device.interface)
         remote: Optional[IPv4Address] = link.server if link else None
-        return cls(role=self._role, device=device, remote=remote)
+        return cls(role=self._role, device=device, remote=remote, network_manager=self)
+
+
+class NetworkMonitorTask(Task):
+
+    def step(self, nm: NetworkManager):
+        # collect link statistics
+        for interface, stats in nm.link_statistics.items():
+            Report.log({
+                f"link/{interface}": stats
+            })
+        # collect channel statistics
+        for channel, stats in nm.channel_statistics.items():
+            Report.log({
+                f"channel/{channel.strip('/')}": stats
+            })

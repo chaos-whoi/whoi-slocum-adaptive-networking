@@ -31,22 +31,25 @@ class ZeroconfListener(Shuttable):
     def stop(self):
         self._browser.cancel()
 
-    def advertise(self, service: NetworkPeerService):
+    @staticmethod
+    def advertise(service: NetworkPeerService):
         # DEBUG:
         # print(f"ZC: Advertising service:\n\n{indent_block(str(service))}\n")
         # DEBUG:
         zc.register_service(service)
 
     def on_new_network_interface(self, adapter: Adapter):
-        self.advertise(NetworkPeerService(
-            role=self._role,
-            key=PROCESS_KEY,
-            iface=adapter.name,
-            address=adapter.ip_address or None,
-            network=adapter.ip_network or None,
-            port=ZMQ_SERVER_PORT,
-            payload={}
-        ))
+        # TODO: this is not needed, the adapter class is taking care of this
+        pass
+        # self.advertise(NetworkPeerService(
+        #     role=self._role,
+        #     key=PROCESS_KEY,
+        #     iface=adapter.name,
+        #     address=adapter.ip_address or None,
+        #     network=adapter.ip_network or None,
+        #     port=ZMQ_SERVER_PORT,
+        #     payload={}
+        # ))
 
     def _on_service_state_change(self, zeroconf: Zeroconf, service_type: str, name: str,
                                  state_change: ServiceStateChange):
@@ -63,6 +66,11 @@ class ZeroconfListener(Shuttable):
         # sanitize server field, zeroconf appends a '.' at the end
         service.server = service.server.strip(".")
         # ---
+
+        # TODO: this should notify the switchboard of the ip address of the peer.
+        #       using the IP network, services received via mDNS are mapped to local
+        #       adapters, which are then instructed on where to find the server to connect to
+
         # DEBUG:
         print(f"Service {name} of type {service_type} changed:\n\n"
               f"    state change: {state_change}\n\n"

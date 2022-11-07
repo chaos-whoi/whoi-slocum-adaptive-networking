@@ -4,10 +4,12 @@ from time import sleep
 from abc import abstractmethod
 from collections import Callable, defaultdict
 from typing import Set, Dict, List, Optional
+from threading import Condition
 
 import yaml
 from pydantic import BaseModel
 
+from ..constants import INFTY
 from ..exceptions import InvalidStateError
 from ..time import Clock
 
@@ -83,9 +85,9 @@ class Shuttable:
 
 class Reminder:
 
-    def __init__(self, period=None, frequency=None):
+    def __init__(self, period=None, frequency=None, right_away: bool = False):
         self._period = Reminder._get_period(period, frequency)
-        self._last_execution = Clock.time()
+        self._last_execution = -INFTY if right_away else Clock.time()
 
     def reset(self):
         self._last_execution = Clock.time()
@@ -99,7 +101,7 @@ class Reminder:
         _since_last = Clock.time() - self._last_execution
         _is_time = _since_last >= _period
         if _is_time and not dry_run:
-            _residual = _since_last - _period
+            _residual = _since_last - _period if self._last_execution >= 0 else 0
             self._last_execution = Clock.time() - _residual
         return _is_time
 
@@ -154,7 +156,8 @@ class FlowWatch:
 
     @property
     def speed(self) -> float:
-        return (self._total - self._last_total) / Clock.real_period(Clock.time() - self._last_reset)
+        elapsed: float = Clock.real_period(Clock.time() - self._last_reset)
+        return (self._total - self._last_total) / elapsed
 
     @property
     def frequency(self) -> float:
@@ -196,3 +199,30 @@ class FlowWatch:
             self._counter += 1
             self._total += value
             self._last_signal = now
+
+
+class MonitoredCondition(Condition):
+
+    def __init__(self):
+        super(MonitoredCondition, self).__init__()
+        self._has_changes = False
+
+    def clear(self):
+        self._has_changes = False
+
+    def notifyAll(self) -> None:
+        return self.notify_all()
+
+    def notify_all(self) -> None:
+        self._has_changes = True
+        super(MonitoredCondition, self).notify_all()
+
+    def notify(self, n: int = 1) -> None:
+        self._has_changes = True
+        super(MonitoredCondition, self).notify(n=n)
+
+    def wait(self, timeout: Optional[float] = None) -> bool:
+        if self._has_changes:
+            self._has_changes = False
+            return True
+        return super(MonitoredCondition, self).wait(timeout=timeout)

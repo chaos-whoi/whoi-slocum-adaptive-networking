@@ -2,56 +2,35 @@ from functools import partial
 from threading import Semaphore
 from typing import Optional, Dict, Type
 
-from adanet.asyncio import loop, Task
-from adanet.networking.manager import NetworkManager
 from adanet.sink.base import ISink
+from adanet.sink.disk import DiskSink
+from adanet.sink.ros import ROSSink
+from adanet.sink.simulated import SimulatedSink
 from adanet.source.base import ISource
-from adanet.time import Clock
-from adanet.types import Shuttable
-from adanet.types.agent import AgentRole
-from adanet.types.problem import Problem, Channel, ChannelKind
-from adanet.types.report import Report
-from adanet.types.solution import Solution, SolvedChannel
-
+# - disk
+from adanet.source.disk import DiskSource
+# - ros
+from adanet.source.ros import ROSSource
 # sources and sinks
 # - simulated
 from adanet.source.simulated import SimulatedSource
-from adanet.sink.simulated import SimulatedSink
-# - ros
-from adanet.source.ros import ROSSource
-from adanet.sink.ros import ROSSink
-# - disk
-from adanet.source.disk import DiskSource
-from adanet.sink.disk import DiskSink
+from adanet.time import Clock
+from adanet.types import Shuttable
+from adanet.types.agent import AgentRole
+from adanet.types.message import Message
+from adanet.types.network import INetworkManager, ISwitchboard
+from adanet.types.problem import Problem, Channel, ChannelKind
+from adanet.types.solution import Solution, SolvedChannel
 
 
-class NetworkMonitorTask(Task):
+class Switchboard(Shuttable, ISwitchboard):
 
-    def step(self, nm: NetworkManager):
-        # wait for the network manager to be alive
-        if not nm.is_alive():
-            return
-        # collect link statistics
-        for interface, stats in nm.link_statistics.items():
-            Report.log({
-                f"link/{interface}": stats
-            })
-        # collect channel statistics
-        for channel, stats in nm.channel_statistics.items():
-            Report.log({
-                f"channel/{channel.strip('/')}": stats
-            })
-
-
-class Switchboard(Shuttable):
-
-    def __init__(self, role: AgentRole, problem: Problem, network_manager: NetworkManager,
-                 simulation: bool = False):
+    def __init__(self, role: AgentRole, problem: Problem, simulation: bool = False):
         super(Switchboard, self).__init__()
         self._role = role
         self._problem: Problem = problem
         self._simulation: bool = simulation
-        self._network_manager: NetworkManager = network_manager
+        self._network_manager: Optional[INetworkManager] = None
         self._solution: Optional[Solution] = None
         self._channels: Dict[str, SolvedChannel] = {}
         self._sources: Dict[str, ISource] = {}
@@ -65,7 +44,7 @@ class Switchboard(Shuttable):
                 source: ISource = Source(size=channel.size,
                                          channel=channel.name,
                                          frequency=channel.frequency)
-                source.register_callback(partial(self._on_recv, channel.name))
+                source.register_callback(partial(self._send, channel.name))
                 self._sources[channel.name] = source
 
         # instantiate data sinks
@@ -75,16 +54,48 @@ class Switchboard(Shuttable):
                 sink: ISink = Sink(size=channel.size,
                                    channel=channel.name,
                                    frequency=channel.frequency)
-                sink.register_callback(partial(self._on_recv, channel.name))
                 self._sinks[channel.name] = sink
 
-        # activate network monitor
-        task: Task = NetworkMonitorTask(period=Clock.period(2.0))
-        loop.add_task(task, self._network_manager)
+    @property
+    def network_manager(self) -> INetworkManager:
+        return self._network_manager
+
+    @network_manager.setter
+    def network_manager(self, network_manager: INetworkManager):
+        self._network_manager = network_manager
 
     def start(self):
         # nothing to do
         pass
+
+    def send(self, message: Message):
+        with self._lock:
+            # get channel solution
+            solved_channel: Optional[SolvedChannel] = self._channels.get(message.channel, None)
+            # make sure we have a solution for this channel
+            if solved_channel is None:
+                return
+        # find next interface for this channel according to the current solution
+        interface: Optional[str] = solved_channel.next()
+        if interface is None:
+            return
+        # send data down to the network manager
+        self._network_manager.send(interface, message)
+
+    def recv(self, message: Message):
+        # find channel's sink
+        sink: Optional[ISink] = self._sinks.get(message.channel, None)
+        if not sink:
+            print(f"Received message for unknown channel '{message.channel}'")
+            return
+        # send data up to the sink
+        sink.recv(message.payload)
+
+    def _send(self, channel: str, data: bytes):
+        # pack message
+        message: Message = Message(channel, Clock.time(), data)
+        # send message
+        self.send(message)
 
     def update_solution(self, solution: Solution):
         with self._lock:
@@ -102,34 +113,24 @@ class Switchboard(Shuttable):
                 # TODO:
                 pass
 
-    def _on_recv(self, channel: str, data: bytes):
-        with self._lock:
-            # get channel solution
-            solved_channel: Optional[SolvedChannel] = self._channels.get(channel, None)
-            # make sure we have a solution for this channel
-            if solved_channel is None:
-                return
-        # find next interface for this channel according to the current solution
-        interface: Optional[str] = solved_channel.next()
-        if interface is None:
-            return
-        # send data through interface
-        self._network_manager.send(interface, channel, data)
-
     def _source(self, channel: Channel) -> Type[ISource]:
         # choose between simulated and real data sources
         if self._simulation:
             return SimulatedSource
-        if channel.kind is ChannelKind.ROS:
+        if channel.kind == ChannelKind.ROS.value:
             return ROSSource
-        elif channel.kind is ChannelKind.DISK:
+        elif channel.kind == ChannelKind.DISK.value:
             return DiskSource
+        else:
+            raise ValueError(f"Unknown channel kind '{channel.kind}'")
 
     def _sink(self, channel: Channel) -> Type[ISink]:
         # choose between simulated and real data sinks
         if self._simulation:
             return SimulatedSink
-        if channel.kind is ChannelKind.ROS:
+        if channel.kind == ChannelKind.ROS.value:
             return ROSSink
-        elif channel.kind is ChannelKind.DISK:
+        elif channel.kind == ChannelKind.DISK.value:
             return DiskSink
+        else:
+            raise ValueError(f"Unknown channel kind '{channel.kind}'")

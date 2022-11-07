@@ -1,5 +1,5 @@
-from time import sleep
 from threading import Thread
+from time import sleep
 from typing import Type, Optional
 
 from adanet.constants import FORMULATE_PROBLEM_EVERY_SEC
@@ -34,13 +34,16 @@ class Engine(Shuttable, Thread):
             # instantiate solver
             self._solver: AbsSolver = solver()
         # ---
+        simulation: bool = simulator is not None
         self._problem: Problem = problem
         self._simulator: Optional[Simulator] = simulator
         self._network_manager: NetworkManager = NetworkManager(role=role, problem=problem)
         self._switchboard: Switchboard = Switchboard(role=role, problem=problem,
-                                                     network_manager=self._network_manager,
-                                                     simulation=simulator is not None)
+                                                     simulation=simulation)
         self._zeroconf: ZeroconfListener = ZeroconfListener(role)
+        # link network manager and switchboard
+        self._network_manager.switchboard = self._switchboard
+        self._switchboard.network_manager = self._network_manager
         # tell the network manager to notify zeroconf of any new network interface
         self._network_manager.on_new_interface(self._zeroconf.on_new_network_interface)
 

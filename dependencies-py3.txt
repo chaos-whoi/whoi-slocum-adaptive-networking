@@ -36,3 +36,6 @@ persist-queue
 
 # ping in python
 pythonping
+
+# CBOR
+cbor2

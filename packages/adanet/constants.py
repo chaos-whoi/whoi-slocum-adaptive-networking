@@ -1,7 +1,7 @@
 import os
 import uuid
 
-DEBUG = bool(os.environ.get("DEBUG", 0))
+DEBUG = bool(int(os.environ.get("DEBUG", 0)))
 
 ZERO = 0
 INFTY = 99999999999
@@ -15,6 +15,8 @@ IFACE_PING_CHECK_EVERY_SECS = float(os.environ.get("IFACE_PING_CHECK_EVERY_SECS"
 
 IFACE_MIN_BANDWIDTH_BYTES_SEC = 8
 IFACE_BANDWIDTH_OPTIMISM = 0.5
+
+NETWORK_LOG_EVERY_SECS = float(os.environ.get("NETWORK_LOG_EVERY_SECS", 5.0))
 
 ZEROCONF_PREFIX = "_adanet._tcp.local."
 

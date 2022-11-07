@@ -1,3 +1,4 @@
+import time
 import traceback
 import uuid
 from abc import ABC, abstractmethod
@@ -21,19 +22,23 @@ from ..constants import \
     IFACE_MIN_BANDWIDTH_BYTES_SEC, \
     DEBUG, \
     ZERO, \
-    INFTY, ZMQ_SERVER_PORT
+    INFTY, \
+    ZMQ_SERVER_PORT
 from ..exceptions import InterfaceNotFoundError
 from ..time import Clock
 from ..types import Shuttable
 from ..types.agent import AgentRole
-from ..types.network import NetworkDevice
+from ..types.message import Message
+from ..types.misc import Reminder
+from ..types.network import NetworkDevice, IAdapter, INetworkManager
 from ..zeroconf import zc
 from ..zeroconf.services import NetworkPeerService
 
 
-class Adapter(Shuttable, ABC):
+class Adapter(Shuttable, IAdapter, ABC):
 
-    def __init__(self, role: AgentRole, device: NetworkDevice, remote: Optional[IPv4Address] = None):
+    def __init__(self, role: AgentRole, device: NetworkDevice, network_manager: INetworkManager,
+                 remote: Optional[IPv4Address] = None):
         Shuttable.__init__(self)
         # make sure the interface exists
         iface: str = device.interface
@@ -42,8 +47,10 @@ class Adapter(Shuttable, ABC):
         self._role: AgentRole = role
         self._iface: str = iface
         self._key: str = str(uuid.uuid4())
+        self._network_manager: INetworkManager = network_manager
         # internal state
         self._present: bool = True
+        self._has_ping: bool = False
         self._connected: bool = False
         self._bandwidth_in: float = 0.0
         self._bandwidth_out: float = 0.0
@@ -55,6 +62,9 @@ class Adapter(Shuttable, ABC):
         self._remote: Optional[IPv4Address] = remote
         if self._remote:
             print(f"Forcing interface '{device.interface}' to talk to remote IP {self._remote}")
+        # role: sink (server)
+        if self._role is AgentRole.SINK:
+            self.bind()
         # zeroconf
         # TODO: this should be updated when IP changes or IP is assigned/removed
         # TODO: port here should be the one assigned by the kernel to the zmq socket
@@ -69,6 +79,9 @@ class Adapter(Shuttable, ABC):
             self, AdapterBandwidthWorker.BandwidthDirection.OUT
         )
         self._ping_worker = AdapterPingWorker(self)
+        self._mailman_worker = AdapterMailman(self)
+        # sources listen for heartbeat signal
+        self._heartbeat_worker: AdapterHeartbeatWorker = AdapterHeartbeatWorker(self, role)
         # debug
         if DEBUG:
             self._debug_worker = AdapterDebugger(self)
@@ -99,6 +112,15 @@ class Adapter(Shuttable, ABC):
         :return: the IP address of the remote counterpart
         """
         return self._remote
+
+    @property
+    def socket(self) -> Optional[zmq.Socket]:
+        """
+        The established socket between the sides (if any).
+
+        :return: the established socket
+        """
+        return self._socket
 
     @property
     def ip_address(self) -> Optional[IPv4Address]:
@@ -153,6 +175,17 @@ class Adapter(Shuttable, ABC):
         return self.ip_address is not None
 
     @property
+    def has_ping(self) -> bool:
+        """
+        Tells us whether the interface has an active ping with the other side.
+        This does not mean that the interface is connected to the remote counterpart. Use
+        `is_connected` for that.
+
+        :return: whether the interface has an established ping
+        """
+        return self._has_ping
+
+    @property
     def is_connected(self) -> bool:
         """
         Tells us whether the interface has an active connection to the remote counterpart.
@@ -169,6 +202,10 @@ class Adapter(Shuttable, ABC):
         self._bandwidth_in_worker.start()
         self._bandwidth_out_worker.start()
         self._ping_worker.start()
+        self._heartbeat_worker.start()
+        # role: sink (server)
+        if self._role is AgentRole.SINK:
+            self._mailman_worker.start()
         if DEBUG:
             self._debug_worker.start()
 
@@ -184,33 +221,36 @@ class Adapter(Shuttable, ABC):
         # if DEBUG:
         #     self._debug_worker.start()
 
-    def send(self, channel: str, data: bytes):
-        # TODO: implement this
-        # print(f"SENDING {len(data)}B for '{channel}' through '{self.name}'")
-        pass
+    def send(self, message: Message):
+        if not self.is_connected or self._socket is None:
+            # TODO: mark the message as 'lost'
+            return
+        # serialize message
+        data: bytes = message.serialize()
+        # send data to the socket
+        self._socket.send(data)
 
-    def connect(self):
-        self._socket = self._context.socket(zmq.PAIR)
-        # role: sink (server)
+    def recv(self, data: bytes):
+        # deserialize message
+        message: Message = Message.deserialize(data)
+        # send message up to the network manager
+        self._network_manager.recv(self.name, message)
+        # if this is a server, mark as connected
         if self._role is AgentRole.SINK:
-            # noinspection PyUnresolvedReferences
-            if self._port == 0:
-                address: str = f"tcp://{self.ip_address}"
-                print(f"Binding to random port on {address}...")
-                self._port = self._socket.bind_to_random_port(address)
-            else:
-                address: str = f"tcp://{self.ip_address}:{self._port}"
-                print(f"Binding to {address}...")
-                self._socket.bind(address)
-            print(f"Binded to {address}")
-        # role: source (client)
-        if self._role is AgentRole.SOURCE:
-            server_ip = self._zeroconf_peer_srv.addresses[0]
-            server_port = self._zeroconf_peer_srv.port
-            address: str = f"tcp://{server_ip}:{server_port}"
-            print(f"Connecting to {address}...")
-            self._socket.connect(address)
-            print(f"Connected to {address}")
+            self.set_connected(True)
+
+    def bind(self):
+        self._socket = self._context.socket(zmq.PAIR)
+        # noinspection PyUnresolvedReferences
+        if self._port == 0:
+            address: str = f"tcp://{self.ip_address}"
+            print(f"Binding to random port on {address}...")
+            self._port = self._socket.bind_to_random_port(address)
+        else:
+            address: str = f"tcp://{self.ip_address}:{self._port}"
+            print(f"Binding to {address}...")
+            self._socket.bind(address)
+        print(f"Binded to {address}")
         # advertise service over mDNS
         self._zeroconf_srv = NetworkPeerService(
             self._role, self._key, self._iface, self.ip_address, self.ip_network, self._port
@@ -220,6 +260,25 @@ class Adapter(Shuttable, ABC):
         except (ServiceNameAlreadyRegistered, NonUniqueNameException):
             zc.update_service(self._zeroconf_srv)
 
+    def connect(self):
+        # no network configuration => no connection
+        if self._remote is None and self._zeroconf_peer_srv is None:
+            return
+        # figure out server IP and port
+        if self._remote is not None:
+            # static network configuration
+            server_ip = self._remote
+            server_port = ZMQ_SERVER_PORT
+        else:
+            # zeroconf network configuration
+            server_ip = self._zeroconf_peer_srv.addresses[0]
+            server_port = self._zeroconf_peer_srv.port
+        # connect
+        self._socket = self._context.socket(zmq.PAIR)
+        address: str = f"tcp://{server_ip}:{server_port}"
+        print(f"Connecting to {address}...")
+        self._socket.connect(address)
+        print(f"Connected to {address}")
 
     @property
     def bandwidth_in(self) -> float:
@@ -263,14 +322,14 @@ class Adapter(Shuttable, ABC):
         self._latency = value
         return old
 
-    def set_connected(self, connected: bool):
-        """
-        Updates the internal state given a new network device
-        """
-        self._connected = connected
+    def set_has_ping(self, has_ping: bool):
+        self._has_ping = has_ping
         # TODO: what if the interface goes away and then comes back?
         if self._socket is None:
             self.connect()
+
+    def set_connected(self, connected: bool):
+        self._connected = connected
 
     @property
     def estimated_bandwidth_in(self) -> float:
@@ -304,6 +363,60 @@ class Adapter(Shuttable, ABC):
             zc.unregister_service(self._zeroconf_srv)
 
 
+class AdapterHeartbeatWorker(Thread, Shuttable):
+
+    def __init__(self, adapter: Adapter, role: AgentRole):
+        Thread.__init__(self, daemon=True)
+        Shuttable.__init__(self)
+        # ---
+        self._adapter: Adapter = adapter
+        self._role: AgentRole = role
+
+    def run(self) -> None:
+        while not self.is_shutdown:
+            if self._adapter.socket is None:
+                # TODO: use variable here
+                time.sleep(1)
+                continue
+            # noinspection PyBroadException
+            try:
+                if self._role is AgentRole.SOURCE:
+                    self._adapter.socket.recv(copy=False)
+                    self._adapter.set_connected(True)
+
+                if self._role is AgentRole.SINK:
+                    self._adapter.socket.send(b"x")
+                    # TODO: use variable here
+                    time.sleep(5)
+            except Exception:
+                print(traceback.format_exc())
+
+
+class AdapterMailman(Thread, Shuttable):
+
+    def __init__(self, adapter: Adapter):
+        Thread.__init__(self, daemon=True)
+        Shuttable.__init__(self)
+        # ---
+        self._adapter: Adapter = adapter
+
+    def _consume_from_pipe(self):
+        data: bytes = self._adapter.socket.recv(copy=False)
+        self._adapter.recv(data)
+
+    def run(self) -> None:
+        while not self.is_shutdown:
+            if self._adapter.socket is None:
+                # TODO: use variable here
+                time.sleep(1)
+                continue
+            # noinspection PyBroadException
+            try:
+                self._consume_from_pipe()
+            except Exception:
+                print(traceback.format_exc())
+
+
 class IAdapterWorker(Thread, Shuttable):
 
     def __init__(self, adapter: Adapter, frequency: float, one_shot: bool = False):
@@ -311,7 +424,7 @@ class IAdapterWorker(Thread, Shuttable):
         Shuttable.__init__(self)
         # ---
         self._adapter: Adapter = adapter
-        self._period: float = (1.0 / frequency) if frequency > 0 else 0
+        self._reminder: Reminder = Reminder(frequency=frequency, right_away=True)
         self._one_shoot: bool = one_shot
 
     @abstractmethod
@@ -319,16 +432,14 @@ class IAdapterWorker(Thread, Shuttable):
         pass
 
     def run(self) -> None:
-        last: float = 0.0
         while not self.is_shutdown:
-            is_time = Clock.time() - last > self._period
-            if is_time:
-                last = Clock.time()
+            if self._reminder.is_time():
                 # noinspection PyBroadException
                 try:
                     self._step()
                 except Exception:
                     print(traceback.format_exc())
+            # NOTE: this effectively fixes the maximum frequency of these workers to 10Hz
             sleep(Clock.period(0.1))
 
 
@@ -388,12 +499,13 @@ class AdapterPingWorker(IAdapterWorker):
     def __init__(self, adapter: Adapter):
         super(AdapterPingWorker, self).__init__(
             adapter,
-            frequency=IFACE_PING_CHECK_EVERY_SECS,
+            frequency=1.0 / Clock.period(IFACE_PING_CHECK_EVERY_SECS),
         )
 
     def _step(self):
         # no link => no connection => no ping needed
         if not self._adapter.has_link:
+            self._adapter.set_has_ping(False)
             self._adapter.set_connected(False)
             self._adapter.set_latency(INFTY)
             self._adapter.set_bandwidth_in(0)
@@ -413,10 +525,10 @@ class AdapterPingWorker(IAdapterWorker):
             for response in responses:
                 successes += int(response.success)
                 latency += response.time_elapsed
+            has_ping: bool = successes > 0
+            self._adapter.set_has_ping(has_ping)
             if successes > 0:
-                # we have at least one success => the adapter is connected
-                self._adapter.set_connected(True)
-                # compute average latency
+                # we have at least one success => the adapter is connected, compute average latency
                 self._adapter.set_latency(latency / successes)
 
 
@@ -432,6 +544,7 @@ Interface: {self._adapter.name}
   IPv4 network:               {self._adapter.ip_network}
   Active:                     {self._adapter.is_active}
   Link:                       {self._adapter.has_link}
+  Ping:                       {self._adapter.has_ping}
   Connected:                  {self._adapter.is_connected}
   Bandwidth IN (used):        {self._adapter.bandwidth_in:.0f} B/s
   Bandwidth IN (estimated):   {self._adapter.estimated_bandwidth_in:.0f} B/s
