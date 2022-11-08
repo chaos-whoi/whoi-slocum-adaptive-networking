@@ -5,7 +5,7 @@ from zeroconf import ServiceStateChange, ServiceBrowser, ServiceInfo, Zeroconf
 
 from . import zc
 from .services import NetworkPeerService
-from ..constants import ZEROCONF_PREFIX, PROCESS_KEY, ZMQ_SERVER_PORT
+from ..constants import ZEROCONF_PREFIX, PROCESS_KEY
 from ..networking import Adapter
 from ..types import Shuttable
 from ..types.agent import AgentRole

@@ -116,7 +116,7 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
         if interface not in self._adapters:
             if self._inited:
                 print(f"ERROR: Unknown interface '{interface}'")
-                return
+            return
         # send data down to the adapter
         self._adapters[interface].send(message)
         # measure data usage for both link and channel
