@@ -14,15 +14,26 @@ class Task(Shuttable):
     def __init__(self, period: float, target: Optional[Callable] = None):
         super(Task, self).__init__()
         self._period: float = period
+        self._paused: bool = False
         self._target: Optional[Callable] = target
 
     @property
     def period(self) -> float:
         return self._period
 
+    @property
+    def paused(self) -> bool:
+        return self._paused
+
     @period.setter
     def period(self, value: float):
         self._period = value
+
+    def pause(self):
+        self._paused = True
+
+    def resume(self):
+        self._paused = False
 
     def step(self, *args, **kwargs):
         if self._target is None:
@@ -46,10 +57,11 @@ class EventLoop(Shuttable, Thread):
         self._futures.add(future)
         # execute until shutdown
         while not task.is_shutdown:
-            try:
-                task.step(*args, **kwargs)
-            except StopTaskException:
-                return
+            if not task.paused:
+                try:
+                    task.step(*args, **kwargs)
+                except StopTaskException:
+                    return
             yield from asyncio.sleep(task.period)
         # mark task as finished
         future.set_result(None)

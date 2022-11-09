@@ -29,6 +29,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("role", type=str, choices=["source", "sink"],
                         help="Role of this instance")
+    parser.add_argument("-a", "--agent", required=True, type=str,
+                        help="Agent name")
     parser.add_argument("-s", "--solver", required=False, type=str, choices=solvers.keys(),
                         default=DEFAULT_SOLVER,
                         help="Name of the class to instantiate the solver from")
@@ -63,9 +65,14 @@ def main():
         problem = Problem.parse_obj({"name": problem_name, **yaml.safe_load(fin)})
     print("Problem loaded:\n\t" + "\n\t".join(problem.as_yaml().splitlines()) + "\n")
 
+    # extend channels to be of two types 'live/...' and 'cached/...'
+    if False:
+        # TODO: temporarily disabled
+        problem.categorize_channels(categories=["live", "cached"])
+
     # activate logger (if needed)
     if parsed.logger == "wb":
-        logger = WandBLogger()
+        logger = WandBLogger(parsed.agent, role)
         Report.attach_logger(logger)
 
     # pointers

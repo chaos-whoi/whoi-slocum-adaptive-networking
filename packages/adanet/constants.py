@@ -33,8 +33,9 @@ DEFAULT_SOLVER = "SimpleSolver"
 REPORT_PRECISION_SEC = 0.5
 
 # weights and biases
-WANDB_API_KEY = "9c9f492d9419ea478dbd7540806190989e1d9877"
-WANDB_PROJECT = "test"
+WANDB_API_KEY = os.environ.get("WANDB_API_KEY", "9c9f492d9419ea478dbd7540806190989e1d9877")
+WANDB_PROJECT = os.environ.get("WANDB_PROJECT", "whoi-adanet-test")
+WANDB_NAME = os.environ.get("WANDB_NAME", None)
 WANDB_OFFLINE = os.environ.get("WANDB_OFFLINE", "0").lower() in ["1", "true", "yes"]
 
 # persist-queue

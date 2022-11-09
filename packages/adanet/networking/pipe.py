@@ -48,7 +48,9 @@ class Pipe(Shuttable, Thread):
         self._pub.setsockopt(zmq.LINGER, 0)
         # prevents buffering messages for a "later" delivery on not transmission-ready connections
         self._pub.setsockopt(zmq.IMMEDIATE, 1)
-        # TODO: set high watermark
+        # set high watermark
+        self._pub.setsockopt(zmq.SNDHWM, 1)
+        self._sub.setsockopt(zmq.RCVHWM, 1)
         # subscribe to everything
         self._sub.setsockopt(zmq.SUBSCRIBE, b"")
         # mark as inited

@@ -41,8 +41,8 @@ class Switchboard(Shuttable, ISwitchboard):
         if self._role is AgentRole.SOURCE:
             for channel in problem.channels:
                 Source: Type[ISource] = self._source(channel)
-                source: ISource = Source(size=channel.size,
-                                         channel=channel.name,
+                source: ISource = Source(name=channel.name,
+                                         size=channel.size,
                                          frequency=channel.frequency)
                 source.register_callback(partial(self._send, channel.name))
                 self._sources[channel.name] = source
@@ -51,9 +51,8 @@ class Switchboard(Shuttable, ISwitchboard):
         if self._role is AgentRole.SINK:
             for channel in problem.channels:
                 Sink: Type[ISink] = self._sink(channel)
-                sink: ISink = Sink(size=channel.size,
-                                   channel=channel.name,
-                                   frequency=channel.frequency)
+                sink: ISink = Sink(name=channel.name,
+                                   size=channel.size)
                 self._sinks[channel.name] = sink
 
     @property
@@ -63,6 +62,12 @@ class Switchboard(Shuttable, ISwitchboard):
     @network_manager.setter
     def network_manager(self, network_manager: INetworkManager):
         self._network_manager = network_manager
+
+    def source(self, name: str) -> ISource:
+        return self._sources[name]
+
+    def sink(self, name: str) -> ISink:
+        return self._sinks[name]
 
     def start(self):
         # nothing to do
@@ -103,6 +108,9 @@ class Switchboard(Shuttable, ISwitchboard):
             self._channels = {
                 c.name: c for c in solution.assignments
             }
+            # tell the sources what their solution frequency is
+            for c in solution.assignments:
+                self._sources[c.name].set_solution_frequency(c.frequency)
             # if we are simulating the problem, update the sources' frequency
             if self._simulation:
                 # TODO: the idea here is that simulated sources can be throttled to the actual
@@ -128,9 +136,9 @@ class Switchboard(Shuttable, ISwitchboard):
         # choose between simulated and real data sinks
         if self._simulation:
             return SimulatedSink
-        if channel.kind == ChannelKind.ROS.value:
+        if channel.kind is ChannelKind.ROS:
             return ROSSink
-        elif channel.kind == ChannelKind.DISK.value:
+        elif channel.kind is ChannelKind.DISK:
             return DiskSink
         else:
             raise ValueError(f"Unknown channel kind '{channel.kind}'")

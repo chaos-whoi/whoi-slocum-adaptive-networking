@@ -1,21 +1,29 @@
+import datetime
 import os
 from threading import Semaphore
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import wandb
 
-from adanet.constants import WANDB_API_KEY, WANDB_PROJECT, WANDB_OFFLINE
+from adanet.constants import WANDB_API_KEY, WANDB_PROJECT, WANDB_OFFLINE, WANDB_NAME
 from adanet.logger.base import Logger
+from adanet.types.agent import AgentRole
 
 
 class WandBLogger(Logger):
 
-    def __init__(self):
+    def __init__(self, agent: str, role: AgentRole):
         if WANDB_OFFLINE:
             os.environ["WANDB_MODE"] = "offline"
-        wandb.login(key=WANDB_API_KEY)
+        else:
+            wandb.login(key=WANDB_API_KEY)
         self._lock: Semaphore = Semaphore()
-        self._run = wandb.init(project=WANDB_PROJECT)
+        # pick a name for the run
+        name: Optional[str] = WANDB_NAME
+        if name is None:
+            date = datetime.datetime.now().strftime("%b%d%y_%H:%M:%S")
+            name = f"{agent}_{role.value}_{date}"
+        self._run = wandb.init(project=WANDB_PROJECT, name=name)
         self._buffer: dict = {}
         self._step: int = -1
 

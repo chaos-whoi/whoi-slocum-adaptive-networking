@@ -97,6 +97,9 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
                 } for k, vw in self._channel_flowwatch.items()
             }
 
+    def adapter(self, interface: str) -> Optional[Adapter]:
+        return self._adapters.get(interface, None)
+
     def reset_statistics(self):
         with self._lock:
             for flowwatch in self._interface_flowwatch.values():
@@ -126,6 +129,9 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
     def recv(self, interface: str, message: Message):
         # send data up to the switchboard
         self._switchboard.recv(message)
+        # measure data usage for both link and channel
+        self._interface_flowwatch[interface].signal(len(message.payload))
+        self._channel_flowwatch[message.channel].signal(len(message.payload))
 
     def start(self) -> None:
         # activate network monitor
@@ -204,7 +210,7 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
             for device in list(devices.keys()):
                 if device not in self._whitelisted_links:
                     # print out (only once) that we are ignoring this link
-                    if device not in self._ignored_links:
+                    if self._role is AgentRole.SOURCE and device not in self._ignored_links:
                         print(f"Interface '{device}' of type '{devices[device]}' is not listed in "
                               f"the problem definition, it will not be used.")
                         # mark this device as 'ignored'

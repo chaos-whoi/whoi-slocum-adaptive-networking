@@ -1,6 +1,7 @@
+import os
 from enum import Enum
 from ipaddress import IPv4Address
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Iterable
 
 from pydantic import validator
 
@@ -163,6 +164,30 @@ class Problem(GenericModel):
     channels: List[Channel]
     simulation: Optional[Simulation] = None
     name: str = "real"
+
+    def categorize_channels(self, categories: Iterable[str]):
+        old_channels: List[Channel] = self.channels
+        new_channels: List[Channel] = []
+        # iterate over the categories
+        for category in categories:
+            # iterate over the original channels
+            for channel in old_channels:
+                new_channel = channel.copy(deep=True)
+                new_channel.name = os.path.join(category, channel.name.strip("/"))
+                new_channels.append(new_channel)
+        self.channels = new_channels
+        # iterate over the simulated channels (if any)
+        if self.simulation:
+            old_channels: List[SimulatedChannel] = self.simulation.channels or []
+            new_channels: List[SimulatedChannel] = []
+            # iterate over the categories
+            for category in categories:
+                # iterate over the original channels
+                for channel in old_channels:
+                    new_channel = channel.copy(deep=True)
+                    new_channel.name = os.path.join(category, channel.name.strip("/"))
+                    new_channels.append(new_channel)
+            self.simulation.channels = new_channels
 
     def report(self) -> dict:
         return {

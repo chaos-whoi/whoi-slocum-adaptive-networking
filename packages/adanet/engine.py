@@ -1,16 +1,18 @@
 from threading import Thread
 from time import sleep
-from typing import Type, Optional
+from typing import Type, Optional, List
 
 from adanet.constants import FORMULATE_PROBLEM_EVERY_SEC
+from adanet.networking import Adapter
 from adanet.networking.manager import NetworkManager
 from adanet.simulation import Simulator
 from adanet.solver.base import AbsSolver
+from adanet.source.base import ISource
 from adanet.switchboard import Switchboard
 from adanet.time import Clock
 from adanet.types import Shuttable
 from adanet.types.agent import AgentRole
-from adanet.types.problem import Problem, Link
+from adanet.types.problem import Problem, Link, Channel
 from adanet.types.report import Report
 from adanet.types.solution import Solution
 from adanet.utils import indent_block
@@ -65,14 +67,21 @@ class Engine(Shuttable, Thread):
     def _formulate_new_problem(self) -> Problem:
         if self._simulator:
             # simulated problem
-            return self._simulator.step()
+            problem = self._simulator.step()
         else:
-            # start from a copy of the old problem
-            problem: Problem = Problem(links=[], channels=self._problem.channels)
+            # start from an empty problem
+            links: List[Link] = []
+            channels: List[Channel] = []
+            # add channels to the problem
+            for channel in self._problem.channels:
+                new_channel: Channel = channel.copy(deep=True)
+                # update frequency based on the source's readings
+                source: ISource = self._switchboard.source(channel.name)
+                new_channel.frequency = source.frequency
             # add links to the problem
             for adapter in self._network_manager.adapters:
                 # use the statistics collector to formulate a new problem
-                problem.links.append(Link(
+                links.append(Link(
                     interface=adapter.device.interface,
                     # TODO: perhaps we should use a combination of IN and OUT bandwidth
                     bandwidth=adapter.bandwidth_out,
@@ -80,8 +89,15 @@ class Engine(Shuttable, Thread):
                     # TODO: this is not used
                     reliability=1.0,
                 ))
-            # ---
-            return problem
+            # compile the problem
+            problem: Problem = Problem(links=links, channels=channels)
+        # remove adapters that have no signal
+        for link in list(problem.links):
+            adapter: Optional[Adapter] = self._network_manager.adapter(link.interface)
+            if adapter is None or not adapter.is_connected:
+                problem.links.remove(link)
+        # ---
+        return problem
 
     def _solve_problem(self) -> Solution:
         stime = Clock.true_time()

@@ -1,0 +1,8 @@
+ARCH=arm64v8
+WANDB_PROJECT=whoi-adanet-puerto-rico-2022
+
+GLIDER_OPTS=--logger wb
+GLIDER_NETWORK=container:glider-boat_computer0_1
+
+SHORE_OPTS=--logger wb
+SHORE_NETWORK=container:glider-boat_computer1_1

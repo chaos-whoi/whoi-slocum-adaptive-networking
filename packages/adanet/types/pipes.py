@@ -4,9 +4,18 @@ from typing import Callable, Optional
 
 class IPipe(ABC):
 
-    def __init__(self, size: int, *_, **__):
+    def __init__(self, name: str, size: int, *_, **__):
+        self._name: str = name
         self._size: int = size
         self._callback: Optional[Callable[[bytes], None]] = None
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def size(self) -> int:
+        return self._size
 
     def register_callback(self, callback: Callable[[bytes], None]):
         if self._callback is not None:

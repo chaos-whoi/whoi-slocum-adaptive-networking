@@ -1,0 +1,30 @@
+version: "2.4"
+services:
+
+    glider:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: glider
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 1
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- source --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        network_mode: ${GLIDER_NETWORK}
+
+    shore:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: shore
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 1
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- sink --problem /problem/shore.yaml ${SHORE_OPTS}"
+        network_mode: ${SHORE_NETWORK}
