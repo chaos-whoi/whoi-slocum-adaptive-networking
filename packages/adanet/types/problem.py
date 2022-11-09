@@ -95,6 +95,7 @@ class Link(GenericModel):
 
 
 class ChannelQoS(GenericModel):
+    queue_size: int = 1
     latency: Optional[float] = None
     frequency: Optional[float] = None
     latency_policy: LatencyPolicy = LatencyPolicy.BEST_EFFORT
@@ -125,12 +126,16 @@ class Channel(GenericModel):
     size: Optional[int] = None
     qos: Optional[ChannelQoS] = None
 
+    # (internal use only)
+    # - packet stored in queue waiting to be bridged
+    queue_length: int = 0
+
     def report(self) -> dict:
         return {
             "priority": self.priority,
             "frequency": self.frequency,
             "size": self.size,
-            "qos": self.qos.report(),
+            "qos": self.qos.report() if self.qos else None,
         }
 
 

@@ -75,9 +75,7 @@ class Engine(Shuttable, Thread):
             # add channels to the problem
             for channel in self._problem.channels:
                 new_channel: Channel = channel.copy(deep=True)
-                # update frequency based on the source's readings
-                source: ISource = self._switchboard.source(channel.name)
-                new_channel.frequency = source.frequency
+                channels.append(new_channel)
             # add links to the problem
             for adapter in self._network_manager.adapters:
                 # use the statistics collector to formulate a new problem
@@ -91,6 +89,14 @@ class Engine(Shuttable, Thread):
                 ))
             # compile the problem
             problem: Problem = Problem(links=links, channels=channels)
+
+        # update channels with real data
+        for channel in problem.channels:
+            source: ISource = self._switchboard.source(channel.name)
+            # update frequency based on the source's readings
+            channel.frequency = source.frequency
+            # update current queue length
+            channel.queue_length = source.queue_length
         # remove adapters that have no signal
         for link in list(problem.links):
             adapter: Optional[Adapter] = self._network_manager.adapter(link.interface)

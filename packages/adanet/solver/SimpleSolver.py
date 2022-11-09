@@ -1,5 +1,5 @@
-from math import ceil
 from collections import defaultdict
+from math import ceil
 from typing import List, Dict, Iterator
 
 from adanet.constants import FORMULATE_PROBLEM_EVERY_SEC
@@ -42,8 +42,10 @@ class SimpleSolver(AbsSolver):
             for channel in channels:
                 interfaces: List[str] = []
                 # frequency is either the QoS frequency (if given) or the original frequency
-                frequency: float = channel.qos.frequency if channel.qos else channel.frequency
-                packets_total: int = int(frequency * FORMULATE_PROBLEM_EVERY_SEC)
+                frequency: float = channel.qos.frequency \
+                    if (channel.qos and channel.qos.frequency) else channel.frequency
+                packets_total: int = channel.queue_length + \
+                                     int(frequency * FORMULATE_PROBLEM_EVERY_SEC)
                 packets_sent: int = 0
                 # find good/slow links
                 good_links: List[Link] = []
@@ -61,7 +63,7 @@ class SimpleSolver(AbsSolver):
                 num_assignments: int = int(num_links * ceil(packets_total / (num_links or 1)))
                 assert (num_links == 0) or (num_assignments >= packets_total)
 
-                # assign links to packets
+                # assign packets to links
                 for _ in range(num_assignments):
                     i: int = 0
                     for link in links_iter:
@@ -74,6 +76,13 @@ class SimpleSolver(AbsSolver):
 
                         enough_budget: bool = link.budget is None or link.budget >= channel.size
                         enough_bw: bool = link.capacity >= channel.size
+
+                        # DEBUG:
+                        # print(packets_sent, packets_total,
+                        #       link.budget, link.capacity,
+                        #       enough_budget, enough_bw)
+                        # DEBUG:
+
                         if enough_budget and enough_bw:
                             # update link's budget
                             if link.budget:

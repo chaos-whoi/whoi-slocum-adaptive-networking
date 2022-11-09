@@ -1,7 +1,6 @@
 from collections import defaultdict
-from typing import List, Any, Dict, Optional, Iterator
+from typing import List, Any, Dict, Iterator
 
-from ..time import Clock
 from ..types.misc import Reminder, GenericModel
 from ..types.problem import Problem, Channel
 
@@ -21,41 +20,38 @@ class SolvedChannel(GenericModel):
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-        self._reminder: Optional[Reminder] = None
         self._iterator = self._iface_iterator()
-        if self.frequency > 0:
-            self._reminder = Reminder(period=Clock.period(1.0 / self.frequency))
 
     def _iface_iterator(self) -> Iterator[str]:
         cursor: int = 0
         if len(self.interfaces) > 0:
+
             # DEBUG:
             # stime1 = Clock.time()
             # stime2 = Clock.time()
             # DEBUG:
+
             while True:
+
                 # DEBUG:
                 # print("IS_TIME[?]: ", Clock.time() - stime1,
                 #       Clock.real_period(Clock.time() - stime1),
                 #       1.0 / Clock.real_period(Clock.time() - stime1))
                 # stime1 = Clock.time()
                 # DEBUG:
+
                 if cursor >= len(self.interfaces):
                     cursor = 0
-                if not self._is_time():
-                    yield None
-                    continue
+
                 # DEBUG:
                 # print("IS_TIME[V]: ", Clock.time() - stime2,
                 #       Clock.real_period(Clock.time() - stime2),
                 #       1.0 / Clock.real_period(Clock.time() - stime2))
                 # stime2 = Clock.time()
                 # DEBUG:
+
                 yield self.interfaces[cursor]
                 cursor += 1
-
-    def _is_time(self):
-        return self._reminder is not None and self._reminder.is_time()
 
     def next(self):
         try:

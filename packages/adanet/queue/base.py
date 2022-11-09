@@ -14,6 +14,11 @@ class IQueue(ABC):
         self._type: QueueType = type
         self._channel: str = channel
 
+    @property
+    @abstractmethod
+    def length(self) -> int:
+        pass
+
     @abstractmethod
     def put(self, data: bytes):
         pass

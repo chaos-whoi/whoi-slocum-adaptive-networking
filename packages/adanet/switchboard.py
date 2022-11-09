@@ -40,10 +40,13 @@ class Switchboard(Shuttable, ISwitchboard):
         # instantiate data sources
         if self._role is AgentRole.SOURCE:
             for channel in problem.channels:
+                queue_size: int = channel.qos.queue_size if channel.qos else 1
                 Source: Type[ISource] = self._source(channel)
                 source: ISource = Source(name=channel.name,
                                          size=channel.size,
-                                         frequency=channel.frequency)
+                                         frequency=channel.frequency,
+                                         queue_size=queue_size,
+                                         qos=channel.qos)
                 source.register_callback(partial(self._send, channel.name))
                 self._sources[channel.name] = source
 

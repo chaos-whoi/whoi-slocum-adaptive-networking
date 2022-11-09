@@ -9,9 +9,11 @@ from adanet.queue.base import IQueue, QueueType
 
 class Queue(IQueue, SQLiteQueue):
 
-    def __init__(self, type: QueueType, channel: str, multithreading: bool = False,
+    def __init__(self, type: QueueType, channel: str, max_size: int, multithreading: bool = False,
                  memory: bool = False):
         IQueue.__init__(self, type, channel)
+        self._max_size: int = max_size
+        # in memory database
         if memory:
             queue_location: str = ":memory:"
         else:
@@ -20,7 +22,15 @@ class Queue(IQueue, SQLiteQueue):
         # make queue
         SQLiteQueue.__init__(self, queue_location, auto_commit=True, multithreading=multithreading)
 
+    @property
+    def length(self) -> int:
+        return self.size
+
     def put(self, data: bytes, block: bool = True):
+        if self.length >= self._max_size:
+            # remove oldest
+            _ = SQLiteQueue.get(self, block=False, timeout=0)
+        # add new
         SQLiteQueue.put(self, data, block=block)
 
     def get(self, block: bool = True, timeout: Optional[float] = None, default: Any = None) -> \

@@ -1,12 +1,14 @@
 import time
 from threading import Thread
+from typing import Optional
 
 from adanet.queue.base import IQueue, QueueType
 from adanet.types.pipes import IPipe
-
 from ..queue.lazy import Queue as LazyQueue
 from ..queue.sqlite import Queue as SQLiteQueue
 from ..types import Shuttable
+from ..types.misc import Reminder
+from ..types.problem import ChannelQoS
 
 
 class ISource(IPipe):
@@ -15,6 +17,9 @@ class ISource(IPipe):
         super(ISource, self).__init__(name=name, size=size)
         self._frequency: float = frequency
         self._solution_frequency: float = 0.0
+        self._qos: Optional[ChannelQoS] = kwargs.get("qos", None)
+        self._reminder: Optional[Reminder] = Reminder(frequency=self._qos.frequency) \
+            if (self._qos and self._qos.frequency is not None) else None
         queue_size: int = kwargs.get("queue_size", 1)
         self._windmill: MessageWindmill = MessageWindmill(self, QueueType.CACHE, queue_size)
         self._windmill.start()
@@ -22,6 +27,10 @@ class ISource(IPipe):
     @property
     def frequency(self) -> float:
         return self._frequency
+
+    @property
+    def queue_length(self) -> int:
+        return self._windmill.queue_length
 
     @property
     def solution_frequency(self) -> float:
@@ -34,7 +43,8 @@ class ISource(IPipe):
         self._on_data(data)
 
     def _produce(self, data: bytes):
-        self._windmill.put(data)
+        if self._reminder.is_time():
+            self._windmill.put(data)
 
 
 class MessageWindmill(Shuttable, Thread):
@@ -48,6 +58,10 @@ class MessageWindmill(Shuttable, Thread):
     @property
     def is_spinning(self) -> bool:
         return self._source.solution_frequency > 0
+
+    @property
+    def queue_length(self) -> int:
+        return self._queue.length
 
     @property
     def _sleep_period(self) -> float:
@@ -72,6 +86,6 @@ class MessageWindmill(Shuttable, Thread):
         if type is QueueType.CACHE:
             if size == 1:
                 return LazyQueue(type, channel)
-            return SQLiteQueue(type, channel, multithreading=True, memory=size < 100)
+            return SQLiteQueue(type, channel, size, multithreading=True, memory=size < 100)
         elif type is QueueType.PERSISTENT:
-            return SQLiteQueue(type, channel, multithreading=True)
+            return SQLiteQueue(type, channel, size, multithreading=True)

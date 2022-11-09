@@ -12,6 +12,10 @@ class Queue(IQueue):
         self._content: Optional[bytes] = None
         self._event: MonitoredCondition = MonitoredCondition()
 
+    @property
+    def length(self) -> int:
+        return 0 if self._content is None else 1
+
     def put(self, data: bytes):
         self._content = data
         with self._event:
@@ -20,5 +24,6 @@ class Queue(IQueue):
     def get(self, block: bool = True) -> Optional[bytes]:
         if self._content is None and not block:
             return None
-        self._event.wait()
+        with self._event:
+            self._event.wait()
         return self._content
