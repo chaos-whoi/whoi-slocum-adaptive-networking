@@ -29,12 +29,20 @@ class SimpleSolver(AbsSolver):
         channel_groups: List[List[Channel]] = [
             groups[p] for p in sorted(groups.keys(), reverse=True)
         ]
+        # - find biggest currently streaming channel
+        biggest_packet_size: int = 0
+        for c in problem.channels:
+            if c.frequency and c.size:
+                biggest_packet_size = max(biggest_packet_size, c.size)
         # - sort links by latency
         links: List[Link] = []
         for link1 in problem.links:
             link = link1.copy(deep=True)
+            # to avoid getting stuck in a bandwidth=0 situation, assume bandwidth is always good
+            # enough to transfer a single packet of the biggest channel in the current deltaT
+            bandwidth: float = max(biggest_packet_size, link.bandwidth if link.bandwidth else 0)
             # - convert bandwidth into capacity
-            link.capacity = link.bandwidth * FORMULATE_PROBLEM_EVERY_SEC
+            link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
             links.append(link)
         links.sort(key=lambda l: l.latency)
         # - allocate bandwidth to channels according to priority and bandwidth left
@@ -70,7 +78,8 @@ class SimpleSolver(AbsSolver):
                         if i >= len(good_links):
                             # we iterate over the entire list of compatible links and could not
                             # squeeze the packet anywhere, check if we can use incompatible links
-                            if channel.qos.latency_policy == LatencyPolicy.BEST_EFFORT:
+                            if channel.qos is not None and \
+                                    channel.qos.latency_policy == LatencyPolicy.BEST_EFFORT:
                                 links_iter: Iterator[Link] = infinite_iterator(slow_links)
                             break
 
