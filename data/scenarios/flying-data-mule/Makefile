@@ -7,6 +7,18 @@ virtual-network:
 adanet:
 	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml up
 
+glider-in-range:
+	@docker exec ${PROJECT}_ppp1_0_1 ip link set dev ppp0 up
+
+glider-out-of-range:
+	@docker exec ${PROJECT}_ppp1_0_1 ip link set dev ppp0 down
+
+shore-in-range:
+	@docker exec ${PROJECT}_ppp1_2_1 ip link set dev ppp1 up
+
+shore-out-of-range:
+	@docker exec ${PROJECT}_ppp1_2_1 ip link set dev ppp1 down
+
 
 
 show-network-configuration:

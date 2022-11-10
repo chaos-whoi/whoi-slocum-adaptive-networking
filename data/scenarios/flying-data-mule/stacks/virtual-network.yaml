@@ -3,7 +3,6 @@ services:
 
     serial0_1:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
-        container_name: serial0_1
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV0_0
@@ -16,7 +15,6 @@ services:
 
     serial1_2:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
-        container_name: serial1_2
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV1_1
@@ -29,77 +27,96 @@ services:
 
     computer0: &computer
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
-        container_name: computer0
         environment:
             CPK_LAUNCHER: sleep
         command: -- infinity
 
     computer1:
         <<: *computer
-        container_name: computer1
 
     computer2:
         <<: *computer
-        container_name: computer2
 
-    ppp00: &ppp0
+    # glider
+    ppp0_1:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
-        container_name: ppp00
         depends_on:
             -   serial0_1
+        network_mode: service:computer0
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV0_0
             BAUD_RATE: 115200
             NET_IFACE: 0
-            LOCAL_IP: 10.0.0.1
-            REMOTE_IP: 10.0.0.2
+            # glider - backseat IP (on the flying AP network)
+            LOCAL_IP: 192.168.9.150
+            # drone - IP (on the flying AP network)
+            REMOTE_IP: 192.168.9.200
         privileged: true
-        network_mode: service:computer0
         volumes:
             -   type: bind
                 source: /dev
                 target: /dev
 
-    ppp01:
-        <<: *ppp0
-        container_name: ppp01
+    # drone -> glider
+    ppp1_0:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        depends_on:
+            -   serial0_1
         network_mode: service:computer1
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV0_1
             BAUD_RATE: 115200
             NET_IFACE: 0
-            LOCAL_IP: 10.0.0.2
-            REMOTE_IP: 10.0.0.1
-
-    ppp10: &ppp1
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
-        container_name: ppp10
-        depends_on:
-            -   serial1_2
-        environment:
-            CPK_LAUNCHER: ppp-on-serial
-            PORT: /dev/ttyV1_0
-            BAUD_RATE: 115200
-            NET_IFACE: 1
-            LOCAL_IP: 10.0.1.1
-            REMOTE_IP: 10.0.1.2
+            # drone - IP (on the flying AP network)
+            LOCAL_IP: 192.168.9.200
+            # glider - backseat IP (on the flying AP network)
+            REMOTE_IP: 192.168.9.150
         privileged: true
-        network_mode: service:computer1
         volumes:
             -   type: bind
                 source: /dev
                 target: /dev
 
-    ppp11:
-        <<: *ppp1
-        container_name: ppp11
-        network_mode: service:computer2
+    # drone -> shore
+    ppp1_2:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        depends_on:
+            -   serial1_2
+        network_mode: service:computer1
         environment:
             CPK_LAUNCHER: ppp-on-serial
             PORT: /dev/ttyV1_1
             BAUD_RATE: 115200
             NET_IFACE: 1
-            LOCAL_IP: 10.0.1.2
-            REMOTE_IP: 10.0.1.1
+            # drone - IP (on the shore football AP network)
+            LOCAL_IP: 192.168.8.250
+            # football - IP (on the shore football AP network)
+            REMOTE_IP: 192.168.8.100
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    # shore
+    ppp2_1:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        depends_on:
+            -   serial1_2
+        network_mode: service:computer2
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV1_2
+            BAUD_RATE: 115200
+            NET_IFACE: 0
+            # football - IP (on the shore football AP network)
+            LOCAL_IP: 192.168.8.100
+            # drone - IP (on the shore football AP network)
+            REMOTE_IP: 192.168.8.250
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
