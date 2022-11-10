@@ -462,7 +462,7 @@ class AdapterPingWorker(IAdapterWorker):
         # test for connection
         server: Optional[IPv4Address] = self._adapter.remote
         if server is not None:
-            responses: Iterable[Response] = ping(str(server), timeout=4, count=2, interval=0)
+            responses: Iterable[Response] = ping(str(server), timeout=5, count=1, interval=0)
 
             # DEBUG:
             # print(responses)
