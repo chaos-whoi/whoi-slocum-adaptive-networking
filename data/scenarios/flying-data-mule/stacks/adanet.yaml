@@ -3,7 +3,6 @@ services:
 
     glider:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: glider
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -12,12 +11,11 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "source --problem /problem/glider-drone.yaml ${GLIDER_OPTS}"
+        command: "source --agent glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
 
-    drone-glider:
+    glider-drone:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: glider-to-drone
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -26,12 +24,16 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "sink --problem /problem/glider-drone.yaml ${GLIDER_DRONE_OPTS}"
-        network_mode: ${GLIDER_DRONE_NETWORK}
+            - type: volume
+              source: db
+              target: /tmp/queue/persistent
+              volume:
+                nocopy: true
+        command: "sink --agent glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
+        network_mode: ${DRONE_NETWORK}
 
     drone-shore:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: drone-to-shore
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -40,12 +42,16 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "source --problem /problem/drone-shore.yaml ${DRONE_SHORE_OPTS}"
-        network_mode: ${DRONE_SHORE_NETWORK}
+            - type: volume
+              source: db
+              target: /tmp/queue/persistent
+              volume:
+                  nocopy: true
+        command: "source --agent drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
+        network_mode: ${DRONE_NETWORK}
 
     shore:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: shore
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -54,5 +60,8 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "sink --problem /problem/drone-shore.yaml ${SHORE_OPTS}"
+        command: "sink --agent shore --problem /problem/shore.yaml ${SHORE_OPTS}"
         network_mode: ${SHORE_NETWORK}
+
+volumes:
+    db-data:
