@@ -12,7 +12,7 @@ class DiskSource(ISource):
 
     def __init__(self, name: str, size: int, *args, **kwargs):
         super(DiskSource, self).__init__(name=name, size=size, *args, **kwargs)
-        self._db: Queue = Queue(QueueType.PERSISTENT, self.name, multithreading=True)
+        self._db: Queue = Queue(QueueType.PERSISTENT, self.name, max_size=-1, multithreading=True)
         self._task: Task = Task(Clock.period(1.0), self._queue_get)
         loop.add_task(self._task)
 
@@ -20,9 +20,17 @@ class DiskSource(ISource):
     def frequency(self) -> float:
         return self._db.size / FORMULATE_PROBLEM_EVERY_SEC
 
+    @property
+    def _is_time(self) -> bool:
+        return True
+
     def set_solution_frequency(self, value: float):
         super(DiskSource, self).set_solution_frequency(value)
-        self._task.period = Clock.period(1.0 / value)
+        if value <= 0:
+            # pause task
+            self._task.period = -1
+        else:
+            self._task.period = Clock.period(1.0 / value)
 
     def _queue_get(self):
         data: Optional[bytes] = self._db.get(block=False)

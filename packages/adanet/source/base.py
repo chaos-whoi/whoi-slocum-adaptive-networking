@@ -36,6 +36,10 @@ class ISource(IPipe):
     def solution_frequency(self) -> float:
         return self._solution_frequency
 
+    @property
+    def _is_time(self) -> bool:
+        return self._reminder.is_time()
+
     def set_solution_frequency(self, value: float):
         self._solution_frequency = value
 
@@ -43,7 +47,11 @@ class ISource(IPipe):
         self._on_data(data)
 
     def _produce(self, data: bytes):
-        if self._reminder.is_time():
+        # TODO: maybe this is not correct, shouldn't we queue messages at max speed and only
+        #  throttle the transmission? or we throttle the source so we queue at qos speed
+        #  (think of an image stream, better to have a lower fps but larger temporal span
+        #  than the other way around)
+        if self._is_time:
             self._windmill.put(data)
 
 

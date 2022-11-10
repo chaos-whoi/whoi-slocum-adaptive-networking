@@ -139,9 +139,9 @@ class Switchboard(Shuttable, ISwitchboard):
         # choose between simulated and real data sinks
         if self._simulation:
             return SimulatedSink
-        if channel.kind is ChannelKind.ROS:
+        if channel.kind in [ChannelKind.ROS, ChannelKind.ROS.value]:
             return ROSSink
-        elif channel.kind is ChannelKind.DISK:
+        elif channel.kind in [ChannelKind.DISK, ChannelKind.DISK.value]:
             return DiskSink
         else:
             raise ValueError(f"Unknown channel kind '{channel.kind}'")

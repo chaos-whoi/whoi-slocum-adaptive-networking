@@ -28,6 +28,10 @@ class Task(Shuttable):
     @period.setter
     def period(self, value: float):
         self._period = value
+        if value < 0:
+            self.pause()
+        else:
+            self.resume()
 
     def pause(self):
         self._paused = True
