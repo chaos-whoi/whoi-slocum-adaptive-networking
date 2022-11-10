@@ -11,7 +11,10 @@ from .adapters.ethernet import EthernetAdapter
 from .adapters.ppp import PPPAdapter
 from .adapters.wifi import WifiAdapter
 from ..asyncio import Task, loop
-from ..constants import ALLOW_DEVICE_TYPES, NETWORK_LOG_EVERY_SECS
+from ..constants import \
+    ALLOW_DEVICE_TYPES, \
+    NETWORK_LOG_EVERY_SECS, \
+    NETWORK_IFACES_DISCOVERY_EVERY_SECS
 from ..time import Clock
 from ..types import Shuttable
 from ..types.agent import AgentRole
@@ -190,8 +193,8 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
                     cb(adapter)
             # mark as inited
             self._inited = True
-            # TODO: use a constant here
-            sleep(4)
+            # ---
+            sleep(NETWORK_IFACES_DISCOVERY_EVERY_SECS)
 
     def get_devices(self) -> List[Tuple[str, str]]:
         devices: Dict[str, str] = {}
