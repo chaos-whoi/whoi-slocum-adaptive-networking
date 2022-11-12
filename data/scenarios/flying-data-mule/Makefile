@@ -4,8 +4,11 @@ PROJECT=flying-data-mule
 virtual-network:
 	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml up
 
-adanet:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml up
+adanet-real:
+	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up
+
+adanet-simulated:
+	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
 
 glider-in-range:
 	@docker exec ${PROJECT}_ppp1_0_1 ip link set dev ppp0 up

@@ -11,7 +11,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "source --agent glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
 
     glider-drone:
@@ -29,7 +29,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "sink --agent glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
+        command: "-- sink --agent glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
 
     drone-shore:
@@ -47,7 +47,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "source --agent drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
+        command: "-- source --agent drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
 
     shore:
@@ -60,8 +60,8 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "sink --agent shore --problem /problem/shore.yaml ${SHORE_OPTS}"
+        command: "-- sink --agent shore --problem /problem/shore.yaml ${SHORE_OPTS}"
         network_mode: ${SHORE_NETWORK}
 
 volumes:
-    db-data:
+    db:

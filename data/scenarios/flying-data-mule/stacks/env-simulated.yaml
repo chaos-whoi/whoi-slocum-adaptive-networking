@@ -2,9 +2,9 @@ ARCH=amd64
 SCENARIO=flying-data-mule
 WANDB_PROJECT=whoi-adanet-test
 
-GLIDER_NETWORK=container:computer0
-DRONE_NETWORK=container:computer1
-SHORE_NETWORK=container:computer2
+GLIDER_NETWORK=container:flying-data-mule_computer0_1
+DRONE_NETWORK=container:flying-data-mule_computer1_1
+SHORE_NETWORK=container:flying-data-mule_computer2_1
 
 GLIDER_OPTS=--simulation --logger wb
 DRONE_OPTS=--logger wb
