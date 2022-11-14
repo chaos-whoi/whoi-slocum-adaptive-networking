@@ -1,0 +1,26 @@
+version: "2.4"
+services:
+
+    glider:
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: /var/run/avahi-daemon/socket
+              target: /var/run/avahi-daemon/socket
+        command: "-- source --agent ${EXPERIMENT}_glider --problem /scenarios/${EXPERIMENT}/glider.yaml ${GLIDER_OPTS}"
+        network_mode: ${GLIDER_NETWORK}
+        stop_grace_period: 30s
+
+    boat:
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${BOAT_ARCH:?ARCH_NOT_SET}
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        command: "-- sink --agent ${EXPERIMENT}_boat --problem /scenarios/${EXPERIMENT}/boat.yaml ${BOAT_OPTS}"
+        network_mode: ${BOAT_NETWORK}
+        stop_grace_period: 30s

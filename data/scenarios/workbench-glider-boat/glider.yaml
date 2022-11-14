@@ -1,0 +1,12 @@
+links:
+    - interface: wlan0
+      type: wifi-g
+      server: 136.145.249.218
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 10.0
+          queue_size: -1

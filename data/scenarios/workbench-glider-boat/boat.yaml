@@ -1,0 +1,10 @@
+links:
+    - interface: wlp2s0
+      type: wifi-g
+
+channels:
+    - name: "/channel_1"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 10.0
