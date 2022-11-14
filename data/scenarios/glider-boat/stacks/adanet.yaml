@@ -13,9 +13,7 @@ services:
               target: /var/run/avahi-daemon/socket
         command: "-- source --agent ${EXPERIMENT}-glider --problem /scenarios/${EXPERIMENT}/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
-        privileged: true
-        stop_grace_period: 20s
-        stop_signal: SIGINT
+        stop_grace_period: 30s
 
     boat:
         image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${BOAT_ARCH:?ARCH_NOT_SET}
@@ -29,6 +27,4 @@ services:
               target: /var/run/avahi-daemon/socket
         command: "-- sink --agent ${EXPERIMENT}-boat --problem /scenarios/${EXPERIMENT}/boat.yaml ${BOAT_OPTS}"
         network_mode: ${BOAT_NETWORK}
-        privileged: true
-        stop_grace_period: 20s
-        stop_signal: SIGINT
+        stop_grace_period: 30s

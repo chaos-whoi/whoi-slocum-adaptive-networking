@@ -2,23 +2,27 @@ version: "2.4"
 services:
 
     glider:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 1
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
+              source: /var/run/avahi-daemon/socket
+              target: /var/run/avahi-daemon/socket
+            - type: bind
               source: ..
               target: /problem
-        command: "-- source --agent glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent ${EXPERIMENT}-glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
+        stop_grace_period: 30s
 
     glider-drone:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 1
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
@@ -29,14 +33,15 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "-- sink --agent glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
+        command: "-- sink --agent ${EXPERIMENT}-glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
+        stop_grace_period: 30s
 
     drone-shore:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 1
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
@@ -47,21 +52,23 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "-- source --agent drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
+        command: "-- source --agent ${EXPERIMENT}-drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
+        stop_grace_period: 30s
 
     shore:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${SHORE_ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 1
+            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-        command: "-- sink --agent shore --problem /problem/shore.yaml ${SHORE_OPTS}"
+        command: "-- sink --agent ${EXPERIMENT}-shore --problem /problem/shore.yaml ${SHORE_OPTS}"
         network_mode: ${SHORE_NETWORK}
+        stop_grace_period: 30s
 
 volumes:
     db:

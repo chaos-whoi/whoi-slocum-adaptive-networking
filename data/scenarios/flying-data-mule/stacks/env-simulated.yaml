@@ -1,6 +1,11 @@
-ARCH=amd64
-SCENARIO=flying-data-mule
+EXPERIMENT=flying-data-mule
+
+WANDB_OFFLINE=0
 WANDB_PROJECT=whoi-adanet-test
+
+GLIDER_ARCH=amd64
+DRONE_ARCH=amd64
+SHORE_ARCH=amd64
 
 GLIDER_NETWORK=container:flying-data-mule_computer0_1
 DRONE_NETWORK=container:flying-data-mule_computer1_1

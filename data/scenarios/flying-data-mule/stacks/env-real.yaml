@@ -1,6 +1,11 @@
-ARCH=arm64v8
-SCENARIO=flying-data-mule
+EXPERIMENT=flying-data-mule
+
+WANDB_OFFLINE=0
 WANDB_PROJECT=whoi-adanet-puerto-rico-2022
+
+GLIDER_ARCH=arm64v8
+DRONE_ARCH=arm64v8
+SHORE_ARCH=arm64v8
 
 GLIDER_NETWORK=host
 DRONE_NETWORK=host
