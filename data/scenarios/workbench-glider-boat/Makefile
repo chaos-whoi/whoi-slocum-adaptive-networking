@@ -1,4 +1,4 @@
-PROJECT=glider-boat
+PROJECT=workbench-glider-boat
 
 
 virtual-network:
