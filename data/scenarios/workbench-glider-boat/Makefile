@@ -25,6 +25,10 @@ raspberry-pi-as-glider-ros:
 raspberry-pi-as-glider-simulated:
 	docker -H tcp://136.145.249.229:2375 compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up glider
 
+update-images:
+	docker pull docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
+	docker -H tcp://136.145.249.229:2375 pull docker.io/ripl/whoi-slocum-adaptive-networking:master-arm64v8
+
 
 show-network-configuration:
 	@echo "- Connection 1 -----------------------------------------------------------------------"
