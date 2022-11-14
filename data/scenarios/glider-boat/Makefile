@@ -11,10 +11,10 @@ adanet-simulated:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
 
 glider-in-range:
-	@docker exec ${PROJECT}_ppp0_1 ip link set dev ppp0 up
+	@docker exec ${PROJECT}-ppp0-1 ip link set dev ppp0 up
 
 glider-out-of-range:
-	@docker exec ${PROJECT}_ppp0_1 ip link set dev ppp0 down
+	@docker exec ${PROJECT}-ppp0-1 ip link set dev ppp0 down
 
 local-boat:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up boat

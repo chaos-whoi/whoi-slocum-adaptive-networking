@@ -85,6 +85,7 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
                     "frequency": vw.frequency,
                     "volume": vw.volume,
                     "speed": vw.speed,
+                    "connected": int(self._adapters[k].is_connected)
                 } for k, vw in self._interface_flowwatch.items()
             }
 

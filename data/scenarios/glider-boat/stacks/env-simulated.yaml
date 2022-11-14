@@ -1,12 +1,12 @@
 EXPERIMENT=glider-boat
 
-WANDB_OFFLINE=1
+WANDB_OFFLINE=0
 WANDB_PROJECT=whoi-adanet-test
 
 GLIDER_ARCH=amd64
 GLIDER_OPTS=--simulation --logger wb
-GLIDER_NETWORK=container:glider-boat_computer0_1
+GLIDER_NETWORK=container:glider-boat-computer0-1
 
 BOAT_ARCH=amd64
 BOAT_OPTS=--logger wb
-BOAT_NETWORK=container:glider-boat_computer1_1
+BOAT_NETWORK=container:glider-boat-computer1-1

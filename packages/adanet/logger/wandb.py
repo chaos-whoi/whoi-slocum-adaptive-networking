@@ -21,7 +21,7 @@ class WandBLogger(Logger):
         # pick a name for the run
         name: Optional[str] = WANDB_NAME
         if name is None:
-            date = datetime.datetime.now().strftime("%b%d%y_%H:%M:%S")
+            date = datetime.datetime.now().strftime("%d%b%y_%H:%M:%S")
             name = f"{agent}_{role.value}_{date}"
         self._run = wandb.init(project=WANDB_PROJECT, name=name)
         self._buffer: dict = {}

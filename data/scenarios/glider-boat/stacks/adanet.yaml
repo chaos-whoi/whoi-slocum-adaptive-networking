@@ -11,7 +11,7 @@ services:
             - type: bind
               source: /var/run/avahi-daemon/socket
               target: /var/run/avahi-daemon/socket
-        command: "-- source --agent ${EXPERIMENT}-glider --problem /scenarios/${EXPERIMENT}/glider.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent ${EXPERIMENT}_glider --problem /scenarios/${EXPERIMENT}/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
         stop_grace_period: 30s
 
@@ -21,10 +21,6 @@ services:
             DEBUG: 0
             WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
-        volumes:
-            - type: bind
-              source: /var/run/avahi-daemon/socket
-              target: /var/run/avahi-daemon/socket
-        command: "-- sink --agent ${EXPERIMENT}-boat --problem /scenarios/${EXPERIMENT}/boat.yaml ${BOAT_OPTS}"
+        command: "-- sink --agent ${EXPERIMENT}_boat --problem /scenarios/${EXPERIMENT}/boat.yaml ${BOAT_OPTS}"
         network_mode: ${BOAT_NETWORK}
         stop_grace_period: 30s

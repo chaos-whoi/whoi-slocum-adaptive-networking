@@ -14,7 +14,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- source --agent ${EXPERIMENT}-glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent ${EXPERIMENT}_glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
         stop_grace_period: 30s
 
@@ -33,7 +33,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "-- sink --agent ${EXPERIMENT}-glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
+        command: "-- sink --agent ${EXPERIMENT}_glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
         stop_grace_period: 30s
 
@@ -52,7 +52,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "-- source --agent ${EXPERIMENT}-drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
+        command: "-- source --agent ${EXPERIMENT}_drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
         stop_grace_period: 30s
 
@@ -66,7 +66,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- sink --agent ${EXPERIMENT}-shore --problem /problem/shore.yaml ${SHORE_OPTS}"
+        command: "-- sink --agent ${EXPERIMENT}_shore --problem /problem/shore.yaml ${SHORE_OPTS}"
         network_mode: ${SHORE_NETWORK}
         stop_grace_period: 30s
 
