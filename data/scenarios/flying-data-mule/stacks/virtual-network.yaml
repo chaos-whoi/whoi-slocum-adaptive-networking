@@ -2,7 +2,7 @@ version: "2.4"
 services:
 
     serial0_1:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV0_0
@@ -14,7 +14,7 @@ services:
                 target: /dev
 
     serial1_2:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV1_1
@@ -26,7 +26,7 @@ services:
                 target: /dev
 
     computer0: &computer
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: sleep
         command: -- infinity
@@ -39,7 +39,7 @@ services:
 
     # glider
     ppp0_1:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         depends_on:
             -   serial0_1
         network_mode: service:computer0
@@ -60,7 +60,7 @@ services:
 
     # drone -> glider
     ppp1_0:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         depends_on:
             -   serial0_1
         network_mode: service:computer1
@@ -81,7 +81,7 @@ services:
 
     # drone -> shore
     ppp1_2:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         depends_on:
             -   serial1_2
         network_mode: service:computer1
@@ -102,7 +102,7 @@ services:
 
     # shore
     ppp2_1:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         depends_on:
             -   serial1_2
         network_mode: service:computer2

@@ -2,14 +2,14 @@ version: "2.4"
 services:
 
     robot:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         container_name: robot
         environment:
             CPK_LAUNCHER: robot
         network_mode: container:computer0
 
     ship:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         container_name: ship
         environment:
             CPK_LAUNCHER: ship

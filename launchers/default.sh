@@ -5,7 +5,7 @@
 
 
 # launching app
-python3 -m adanet.cli $*
+exec python3 -m adanet.cli $*
 
 
 # ----------------------------------------------------------------------------

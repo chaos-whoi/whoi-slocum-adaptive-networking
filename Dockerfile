@@ -96,4 +96,8 @@ LABEL \
 # copy slow cli
 COPY assets/slow /usr/local/bin/slow
 
+# configure python stdout
 ENV PYTHONUNBUFFERED=1
+
+# copy scenarios
+COPY ./data/scenarios /scenarios

@@ -1,0 +1,13 @@
+links:
+    - interface: ppp0
+      type: wifi-g
+
+    - interface: wlan0
+      type: wifi-g
+
+channels:
+    - name: "/myrobot/camera_node/camera_info"
+      frequency: 30.0
+      size: 10
+      qos:
+          frequency: 10.0

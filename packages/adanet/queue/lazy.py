@@ -16,6 +16,10 @@ class Queue(IQueue):
     def length(self) -> int:
         return 0 if self._content is None else 1
 
+    @property
+    def max_size(self) -> int:
+        return 1
+
     def put(self, data: bytes):
         self._content = data
         with self._event:

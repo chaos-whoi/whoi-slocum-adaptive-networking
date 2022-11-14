@@ -4,7 +4,7 @@ services:
     # computer0 is the robot and it is the one formulating and solving problems
 
     problem_for_computer0:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: bash
         # TODO: we inject either via HTTP request to process or editing an inotify monitored file
@@ -15,7 +15,7 @@ services:
     # computer1 is the ship, and it is the one analyzing the solution
 
     problem_for_computer1:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: bash
         # TODO: we inject either via HTTP request to process or editing an inotify monitored file

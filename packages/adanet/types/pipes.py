@@ -28,4 +28,7 @@ class IPipe(ABC):
     def _on_data(self, data: bytes):
         if self._callback is None:
             return
+        # update size
+        self._size = max(self._size, len(data))
+        # ---
         self._callback(data)

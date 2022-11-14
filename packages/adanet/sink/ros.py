@@ -12,5 +12,5 @@ class ROSSink(ISink):
 
     def recv(self, data: bytes):
         # TODO: publish to ROS topic here
-        print(f"RECEIVED DATA: {data.decode('utf-8')}")
+        print(f"RECEIVED DATA: {len(data)} bytes")
         pass

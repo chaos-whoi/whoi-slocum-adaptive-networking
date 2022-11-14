@@ -11,3 +11,6 @@ socat
 
 # ping
 iputils-ping
+
+# mdns
+libnss-mdns

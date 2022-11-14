@@ -2,14 +2,14 @@ version: "2.4"
 services:
 
     bw_server0: &server
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: bw-server
         privileged: true
         network_mode: container:ppp00
 
     bw_client0: &client
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         depends_on:
             -   bw_server0
         environment:

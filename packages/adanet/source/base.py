@@ -33,6 +33,10 @@ class ISource(IPipe):
         return self._windmill.queue_length
 
     @property
+    def queue_size(self) -> int:
+        return self._windmill.queue_size
+
+    @property
     def solution_frequency(self) -> float:
         return self._solution_frequency
 
@@ -72,6 +76,10 @@ class MessageWindmill(Shuttable, Thread):
         return self._queue.length
 
     @property
+    def queue_size(self) -> int:
+        return self._queue.max_size
+
+    @property
     def _sleep_period(self) -> float:
         if self._source.solution_frequency <= 0:
             # default safe frequency is 1.0Hz
@@ -94,6 +102,6 @@ class MessageWindmill(Shuttable, Thread):
         if type is QueueType.CACHE:
             if size == 1:
                 return LazyQueue(type, channel)
-            return SQLiteQueue(type, channel, size, multithreading=True, memory=size < 100)
+            return SQLiteQueue(type, channel, size, multithreading=True, memory=1 <= size <= 100)
         elif type is QueueType.PERSISTENT:
             return SQLiteQueue(type, channel, size, multithreading=True)

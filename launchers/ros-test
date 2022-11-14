@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+# YOUR CODE BELOW THIS LINE
+# ----------------------------------------------------------------------------
+
+import rospy
+
+from sensor_msgs.msg import CameraInfo
+
+rospy.init_node("adanet_test")
+
+
+def _callback(msg):
+    print(msg)
+
+
+rospy.Subscriber("/myrobot/camera_node/camera_info", CameraInfo, _callback, queue_size=1)
+
+
+rospy.spin()
+
+
+# ----------------------------------------------------------------------------
+# YOUR CODE ABOVE THIS LINE

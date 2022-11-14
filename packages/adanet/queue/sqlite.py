@@ -37,8 +37,12 @@ class Queue(IQueue, SQLiteQueue):
     def length(self) -> int:
         return self._length
 
+    @property
+    def max_size(self) -> int:
+        return self._max_size
+
     def put(self, data: bytes, block: bool = True):
-        if self._max_size >= 0 and self.length >= self._max_size:
+        if self._max_size > 0 and self.length >= self._max_size:
             # remove oldest
             _ = SQLiteQueue.get(self, block=False, timeout=0)
             self._length -= 1

@@ -2,7 +2,7 @@ version: "2.4"
 services:
 
     glider:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -15,7 +15,7 @@ services:
         network_mode: ${GLIDER_NETWORK}
 
     glider-drone:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -33,7 +33,7 @@ services:
         network_mode: ${DRONE_NETWORK}
 
     drone-shore:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1
@@ -51,7 +51,7 @@ services:
         network_mode: ${DRONE_NETWORK}
 
     shore:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             DEBUG: 0
             WANDB_OFFLINE: 1

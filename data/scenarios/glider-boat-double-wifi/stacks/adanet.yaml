@@ -1,0 +1,30 @@
+version: "2.4"
+services:
+
+    glider:
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: glider
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 1
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- source --problem /problem/problem.yaml ${GLIDER_OPTS}"
+        network_mode: ${GLIDER_NETWORK}
+
+    boat:
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: boat
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 1
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- sink --problem /problem/problem.yaml ${BOAT_OPTS}"
+        network_mode: ${BOAT_NETWORK}

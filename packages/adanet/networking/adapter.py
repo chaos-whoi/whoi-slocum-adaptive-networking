@@ -56,7 +56,7 @@ class Adapter(Shuttable, IAdapter, ABC):
         self._device: NetworkDevice = device
         self._remote: Optional[IPv4Address] = remote
         self._pipe: Pipe = Pipe()
-        if self._remote:
+        if self._role is AgentRole.SOURCE and self._remote:
             print(f"Forcing interface '{device.interface}' to talk to remote IP {self._remote}")
         # role: sink (server)
         if self._role is AgentRole.SINK:
@@ -123,7 +123,10 @@ class Adapter(Shuttable, IAdapter, ABC):
 
         :return: the IP address of the interface
         """
-        addresses = netifaces.ifaddresses(self.name).get(netifaces.AF_INET, {})
+        try:
+            addresses = netifaces.ifaddresses(self.name).get(netifaces.AF_INET, {})
+        except ValueError:
+            return None
         if addresses:
             address = addresses[0]
             ip = address.get("addr", None)
@@ -137,7 +140,10 @@ class Adapter(Shuttable, IAdapter, ABC):
 
         :return: the IP network of the interface
         """
-        addresses = netifaces.ifaddresses(self.name).get(netifaces.AF_INET, {})
+        try:
+            addresses = netifaces.ifaddresses(self.name).get(netifaces.AF_INET, {})
+        except ValueError:
+            return None
         if addresses:
             address = addresses[0]
             ip = address.get("addr", None)
@@ -229,6 +235,8 @@ class Adapter(Shuttable, IAdapter, ABC):
         self._network_manager.recv(self.name, message)
 
     def bind(self):
+        if self.ip_address is None:
+            return
         self._pipe.bind(str(self.ip_address))
         # advertise service over mDNS
         self._zeroconf_srv = NetworkPeerService(

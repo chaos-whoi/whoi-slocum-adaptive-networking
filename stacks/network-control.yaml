@@ -4,7 +4,7 @@ services:
     # computer 0
 
     tc00: &tc0
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: tc-on-ppp
             DEVICE: ppp0
@@ -14,7 +14,7 @@ services:
         network_mode: container:computer0
 
     tc10: &tc1
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-amd64
         environment:
             CPK_LAUNCHER: tc-on-ppp
             DEVICE: ppp1

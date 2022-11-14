@@ -10,4 +10,5 @@ class DiskSink(ISink):
         self._db: Queue = Queue(QueueType.PERSISTENT, self.name, max_size=-1, multithreading=True)
 
     def recv(self, data: bytes):
+        print(f"RECEIVED DATA: {len(data)} bytes, DB: {self._db.length}")
         self._db.put(data)

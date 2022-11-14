@@ -19,6 +19,11 @@ class IQueue(ABC):
     def length(self) -> int:
         pass
 
+    @property
+    @abstractmethod
+    def max_size(self) -> int:
+        pass
+
     @abstractmethod
     def put(self, data: bytes):
         pass

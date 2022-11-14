@@ -1,4 +1,6 @@
 import json
+import signal
+import threading
 from threading import Semaphore
 from time import sleep
 from abc import abstractmethod
@@ -57,6 +59,18 @@ class Shuttable:
 
         :param nap_duration: how often (in seconds) we wake up and check for change in status
         """
+        # if we are joining from main thread, register signal handler
+        if threading.current_thread() is threading.main_thread():
+
+            def handler(signum, _):
+                signame = signal.Signals(signum).name
+                print(f"Received {signame} signal, exiting...")
+                self.shutdown()
+
+            # register as SIGINT and SIGTERM signal handler
+            signal.signal(signal.SIGINT, handler)
+            signal.signal(signal.SIGTERM, handler)
+
         try:
             while not self.is_shutdown:
                 sleep(nap_duration)

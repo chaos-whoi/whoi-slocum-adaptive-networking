@@ -2,6 +2,8 @@ from functools import partial
 from threading import Semaphore
 from typing import Optional, Dict, Type
 
+from adanet.asyncio import Task, loop
+from adanet.constants import CHANNELS_LOG_EVERY_SECS
 from adanet.sink.base import ISink
 from adanet.sink.disk import DiskSink
 from adanet.sink.ros import ROSSink
@@ -20,6 +22,7 @@ from adanet.types.agent import AgentRole
 from adanet.types.message import Message
 from adanet.types.network import INetworkManager, ISwitchboard
 from adanet.types.problem import Problem, Channel, ChannelKind
+from adanet.types.report import Report
 from adanet.types.solution import Solution, SolvedChannel
 
 
@@ -46,7 +49,8 @@ class Switchboard(Shuttable, ISwitchboard):
                                          size=channel.size,
                                          frequency=channel.frequency,
                                          queue_size=queue_size,
-                                         qos=channel.qos)
+                                         qos=channel.qos,
+                                         arguments=channel.arguments)
                 source.register_callback(partial(self._send, channel.name))
                 self._sources[channel.name] = source
 
@@ -58,6 +62,10 @@ class Switchboard(Shuttable, ISwitchboard):
                                    size=channel.size)
                 self._sinks[channel.name] = sink
 
+        # create switchboard monitor task
+        self._monitor_task: Task = SwitchboardMonitorTask(
+            period=Clock.period(CHANNELS_LOG_EVERY_SECS))
+
     @property
     def network_manager(self) -> INetworkManager:
         return self._network_manager
@@ -66,6 +74,16 @@ class Switchboard(Shuttable, ISwitchboard):
     def network_manager(self, network_manager: INetworkManager):
         self._network_manager = network_manager
 
+    @property
+    def channel_statistics(self) -> Dict[str, Dict[str, float]]:
+        with self._lock:
+            return {
+                k: {
+                    "queue/length": src.queue_length,
+                    "queue/size": src.queue_size,
+                } for k, src in self._sources.items()
+            }
+
     def source(self, name: str) -> ISource:
         return self._sources[name]
 
@@ -73,8 +91,8 @@ class Switchboard(Shuttable, ISwitchboard):
         return self._sinks[name]
 
     def start(self):
-        # nothing to do
-        pass
+        # activate switchboard monitor
+        loop.add_task(self._monitor_task, self)
 
     def send(self, message: Message):
         with self._lock:
@@ -128,9 +146,9 @@ class Switchboard(Shuttable, ISwitchboard):
         # choose between simulated and real data sources
         if self._simulation:
             return SimulatedSource
-        if channel.kind == ChannelKind.ROS.value:
+        if channel.kind in [ChannelKind.ROS, ChannelKind.ROS.value]:
             return ROSSource
-        elif channel.kind == ChannelKind.DISK.value:
+        elif channel.kind in [ChannelKind.DISK, ChannelKind.DISK.value]:
             return DiskSource
         else:
             raise ValueError(f"Unknown channel kind '{channel.kind}'")
@@ -145,3 +163,13 @@ class Switchboard(Shuttable, ISwitchboard):
             return DiskSink
         else:
             raise ValueError(f"Unknown channel kind '{channel.kind}'")
+
+
+class SwitchboardMonitorTask(Task):
+
+    def step(self, sb: Switchboard):
+        # collect channel statistics
+        for channel, stats in sb.channel_statistics.items():
+            Report.log({
+                f"channel/{channel.strip('/')}": stats
+            })

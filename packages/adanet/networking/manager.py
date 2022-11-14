@@ -200,14 +200,21 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
         devices: Dict[str, str] = {}
         # get wifi devices
         for netdev in self._iw.get_interfaces_dict().keys():
+            if netdev is None:
+                continue
             devices[netdev] = "wifi"
         # get all other devices
         for netdev in self._ip.get_links():
+            if netdev is None:
+                continue
             name: str = netdev.get_attr('IFLA_IFNAME')
             link = netdev.get_attr('IFLA_LINKINFO')
             if link is not None:
                 link = link.get_attr('IFLA_INFO_KIND')
                 devices[name] = link
+            else:
+                # TODO: this is here because Andrea's thinkpad has an eth device that does not pass the test
+                devices[name] = "veth"
         # if a problem is given and the 'links' are populated, stick to those links
         if self._whitelisted_links is not None:
             for device in list(devices.keys()):
@@ -218,8 +225,8 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
                               f"the problem definition, it will not be used.")
                         # mark this device as 'ignored'
                         self._ignored_links.add(device)
-                    # remove device from list
-                    del devices[device]
+                        # remove device from list
+                        del devices[device]
         # ---
         # noinspection PyTypeChecker
         return list(devices.items())

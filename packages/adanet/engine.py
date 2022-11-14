@@ -30,9 +30,9 @@ class Engine(Shuttable, Thread):
         self._solver: Optional[AbsSolver] = None
         # - ROBOT mode
         if role is AgentRole.SOURCE:
-            # make sure a solver is given when running in ROBOT mode
+            # make sure a solver is given when running in SOURCE mode
             if solver is None:
-                raise ValueError("A 'solver' is required when 'role=ROBOT'")
+                raise ValueError("A 'solver' is required when 'role=SOURCE'")
             # instantiate solver
             self._solver: AbsSolver = solver()
         # ---
@@ -95,6 +95,8 @@ class Engine(Shuttable, Thread):
             source: ISource = self._switchboard.source(channel.name)
             # update frequency based on the source's readings
             channel.frequency = source.frequency
+            # update packet size based on the source's readings
+            channel.size = source.size
             # update current queue length
             channel.queue_length = source.queue_length
         # remove adapters that have no signal

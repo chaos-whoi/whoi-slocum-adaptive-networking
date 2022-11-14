@@ -1,0 +1,8 @@
+ARCH=amd64
+WANDB_PROJECT=whoi-adanet-test
+
+GLIDER_OPTS=--simulation --logger wb
+GLIDER_NETWORK=container:glider-boat-double-wifi_computer0_1
+
+BOAT_OPTS=--logger wb
+BOAT_NETWORK=container:glider-boat-double-wifi_computer1_1
