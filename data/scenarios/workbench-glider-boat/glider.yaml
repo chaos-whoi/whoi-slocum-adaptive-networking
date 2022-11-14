@@ -10,7 +10,7 @@ channels:
       qos:
           frequency: 0.25
           queue_size: -1
-    - name: "/glider/extctl/sensors/m_long"
+    - name: "/glider/extctl/sensors/m_lon"
       frequency: 1
       size: 4
       qos:

@@ -6,6 +6,6 @@ channels:
     - name: "/glider/extctl/sensors/m_lat"
       frequency: 1
       size: 4
-    - name: "/glider/extctl/sensors/m_long"
+    - name: "/glider/extctl/sensors/m_lon"
       frequency: 1
       size: 4
