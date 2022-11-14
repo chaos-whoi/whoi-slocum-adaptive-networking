@@ -3,8 +3,9 @@ links:
       type: wifi-g
 
 channels:
-    - name: "/channel_1"
-      frequency: 30.0
-      size: 10
-      qos:
-          frequency: 10.0
+    - name: "/glider/extctl/sensors/m_lat"
+      frequency: 1
+      size: 4
+    - name: "/glider/extctl/sensors/m_long"
+      frequency: 1
+      size: 4

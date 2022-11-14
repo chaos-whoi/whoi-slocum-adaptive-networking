@@ -4,9 +4,15 @@ links:
       server: 136.145.249.218
 
 channels:
-    - name: "/channel_1"
-      frequency: 30.0
-      size: 10
+    - name: "/glider/extctl/sensors/m_lat"
+      frequency: 1
+      size: 4
       qos:
-          frequency: 10.0
+          frequency: 0.25
+          queue_size: -1
+    - name: "/glider/extctl/sensors/m_long"
+      frequency: 1
+      size: 4
+      qos:
+          frequency: 0.25
           queue_size: -1
