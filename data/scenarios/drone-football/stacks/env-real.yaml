@@ -1,0 +1,9 @@
+ARCH=arm64v8
+WANDB_PROJECT=whoi-adanet-puerto-rico-2022
+PROBLEM_FLAVOR=
+
+DRONE_OPTS=--logger wb
+DRONE_NETWORK=host
+
+SHORE_OPTS=--logger wb
+SHORE_NETWORK=host
