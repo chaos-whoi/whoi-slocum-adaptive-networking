@@ -4,8 +4,11 @@ PROJECT=drone-shore
 virtual-network:
 	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml --env-file ./stacks/env-simulated.yaml up
 
-adanet-real:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up
+adanet-drone:
+	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone
+
+adanet-shore:
+	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up shore
 
 adanet-simulated:
 	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
