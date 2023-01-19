@@ -2,7 +2,7 @@ version: "2.4"
 services:
 
     serial0:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV00
@@ -14,7 +14,7 @@ services:
                 target: /dev
 
     serial1:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             CPK_LAUNCHER: virtual-serials-pair
             PORT_A: /dev/ttyV10
@@ -26,7 +26,7 @@ services:
                 target: /dev
 
     computer0: &computer
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         environment:
             CPK_LAUNCHER: sleep
         command: -- infinity
@@ -35,7 +35,7 @@ services:
         <<: *computer
 
     ppp00: &ppp0
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         depends_on:
             -   serial0
         network_mode: service:computer0
@@ -64,7 +64,7 @@ services:
             REMOTE_IP: 10.0.0.1
 
     ppp10: &ppp1
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-amd64
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         depends_on:
             -   serial1
         network_mode: service:computer0

@@ -2,7 +2,7 @@ PROJECT=drone-shore
 
 
 virtual-network:
-	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml up
+	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml --env-file ./stacks/env-simulated.yaml up
 
 adanet-real:
 	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up
