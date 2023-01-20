@@ -63,6 +63,23 @@ services:
         command: "-- sink --agent football --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
         network_mode: ${FOOTBALL_NETWORK}
 
+    football-drone:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: drone-to-football
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+            - type: bind
+              source: ../queue
+              target: /tmp/queue
+        command: "-- sink --agent drone-to-football --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${FOOTBALL_DRONE_OPTS}"
+        network_mode: ${FOOTBALL_DRONE_NETWORK}
+
     football-toughbook:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         container_name: football-to-toughbook
