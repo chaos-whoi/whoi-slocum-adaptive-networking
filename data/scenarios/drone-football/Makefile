@@ -2,19 +2,19 @@ PROJECT=drone-shore
 
 
 virtual-network:
-	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml --env-file ./stacks/env-simulated.yaml up
+	docker compose -p ${PROJECT} -f ./stacks/virtual-network.yaml --env-file ./stacks/env-simulated.yaml up
 
 adanet-drone-simulated:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up drone
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up drone
 
 adanet-drone:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone
 
 adanet-shore:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up shore
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up shore
 
 adanet-simulated:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
 
 drone-in-range:
 	@docker exec ${PROJECT}_ppp00_1 ip link set dev ppp0 up
