@@ -16,3 +16,12 @@ adanet-drone:
 
 adanet-football:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football
+
+adanet-football-drone:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-drone
+
+adanet-football-toughbook:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-toughbook
+
+adanet-toughbook:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up toughbook

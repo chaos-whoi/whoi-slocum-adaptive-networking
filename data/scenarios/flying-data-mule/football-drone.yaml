@@ -1,6 +1,5 @@
 links:
-    - interface: wlan0
-      server: "192.168.8.133"
+    - interface: eth0
 
 channels:
     # Only for simulation. Needs to be commented out for non-sim
