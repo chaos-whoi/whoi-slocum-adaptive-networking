@@ -17,6 +17,7 @@ adanet-drone:
 adanet-football:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football
 
+# Do we need this?
 adanet-football-drone:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-drone
 

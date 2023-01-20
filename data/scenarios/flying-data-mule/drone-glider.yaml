@@ -4,8 +4,8 @@ links:
 channels:
     # Only for simulation. Needs to be commented out for non-sim
     - name: "/channel_1"
-     size: 10
-     kind: disk
+      size: 10
+      kind: disk
     # # GPS-based latitude
     # - name: "/glider/extctl/sensors/g_gps_lat"
     #   size: 10
