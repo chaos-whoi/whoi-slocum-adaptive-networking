@@ -2,29 +2,35 @@ links:
     - interface: eth0
 
 channels:
-    # Only for simulation. Needs to be commented out for non-sim
+    # Only for simulation
     - name: "/channel_1"
       size: 10
       kind: disk
-    # # GPS-based latitude
-    # - name: "/glider/extctl/sensors/g_gps_lat"
-    #   size: 10
-    #   kind: disk
-    # # GPS-based longitude
-    # - name: "/glider/extctl/sensors/g_gps_lon"
-    #   size: 10
-    #   kind: disk
-    # # Estimated (dead-reckoned) latitude
-    # - name: "/glider/extctl/sensors/g_lat"
-    #   size: 100
-    #   kind: disk
-    # # Estimated (dead-reckoned) longitude
-    # - name: "/glider/extctl/sensors/g_lon"
-    #   size: 100
-    #   kind: disk
-    # - name: "/glider/extctl/sensors/m_depth"
-    #   size: 100
-    #   kind: disk
-    # - name: "/glider/extctl/sensors/m_water_depth"
-    #   size: 10
-    #   kind: disk
+    # GPS-based latitude
+    -   name: "/glider/extctl/sensors/g_gps_lat"
+        qos:
+            frequency: 10.0
+            queue_size: 0
+    # GPS-based longitude
+    -   name: "/glider/extctl/sensors/g_gps_lon"
+        qos:
+            frequency: 10.0
+            queue_size: 0
+    # Estimated (dead-reckoned) latitude
+    -   name: "/glider/extctl/sensors/g_lat"
+        qos:
+            frequency: 10.0
+            queue_size: 0
+    # Estimated (dead-reckoned) longitude
+    -   name: "/glider/extctl/sensors/g_lon"
+        qos:
+            frequency: 10.0
+            queue_size: 0
+    -   name: "/glider/extctl/sensors/m_depth"
+        qos:
+            frequency: 10.0
+            queue_size: 0
+    -   name: "/glider/extctl/sensors/m_water_depth"
+        qos:
+            frequency: 10.0
+            queue_size: 0
