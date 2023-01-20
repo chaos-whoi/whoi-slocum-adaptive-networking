@@ -1,4 +1,4 @@
-ARCH=amd64
+ARCH=arm64v8
 WANDB_PROJECT=whoi-adanet-test
 PROBLEM_FLAVOR=-isolated
 

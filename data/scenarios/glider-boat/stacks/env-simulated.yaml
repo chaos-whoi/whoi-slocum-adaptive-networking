@@ -1,4 +1,4 @@
-ARCH=amd64
+ARCH=arm64v8
 WANDB_PROJECT=whoi-adanet-test
 
 GLIDER_OPTS=--simulation --logger wb

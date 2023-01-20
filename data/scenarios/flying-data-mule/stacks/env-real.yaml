@@ -1,4 +1,4 @@
-ARCH=amd64
+ARCH=arm64v8
 WANDB_PROJECT=whoi-adanet-puerto-rico-2022
 
 GLIDER_OPTS=--simulation --logger wb
