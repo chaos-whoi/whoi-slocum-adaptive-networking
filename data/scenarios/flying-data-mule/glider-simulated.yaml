@@ -1,0 +1,12 @@
+links:
+    #- interface: wlan1
+    #  server: "192.168.8.133"
+    -   interface: wlan2
+        server: "192.168.9.200"
+
+channels:
+    -   name: "/channel_1"
+        frequency: 30
+        size: 10
+        qos:
+            frequency: 10.0

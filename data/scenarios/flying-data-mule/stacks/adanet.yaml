@@ -15,7 +15,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- source --agent glider --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent glider --problem /problem/glider${GLIDER_PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
         stop_grace_period: 30s
 
@@ -35,7 +35,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
+        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${GLIDER_DRONE_PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
         network_mode: ${GLIDER_DRONE_NETWORK}
         stop_grace_period: 30s
 
@@ -55,7 +55,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "-- source --agent drone-to-football --problem /problem/drone-football${PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
+        command: "-- source --agent drone-to-football --problem /problem/drone-football${DRONE_FOOTBALL_PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
         stop_grace_period: 30s
 
@@ -75,7 +75,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "-- source --agent football-to-toughbook --problem /problem/football-toughbook${PROBLEM_FLAVOR}.yaml ${FOOTBALL_TOUGHBOOK_OPTS}"
+        command: "-- source --agent football-to-toughbook --problem /problem/football-toughbook${FOOTBALL_TOUGHBOOK_PROBLEM_FLAVOR}.yaml ${FOOTBALL_TOUGHBOOK_OPTS}"
         network_mode: ${FOOTBALL_TOUGHBOOK_NETWORK}
         stop_grace_period: 30s
 
@@ -90,7 +90,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- sink --agent football --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
+        command: "-- sink --agent football --problem /problem/football${FOOTBALL_PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
         network_mode: ${FOOTBALL_NETWORK}
         stop_grace_period: 30s
 
@@ -105,7 +105,7 @@ services:
             -   type: bind
                 source: ..
                 target: /problem
-        command: "-- sink --agent toughbook --problem /problem/toughbook${PROBLEM_FLAVOR}.yaml ${TOUGHBOOK_OPTS}"
+        command: "-- sink --agent toughbook --problem /problem/toughbook${TOUGHBOOK_PROBLEM_FLAVOR}.yaml ${TOUGHBOOK_OPTS}"
         network_mode: ${TOUGHBOOK_NETWORK}
         stop_grace_period: 30s
 
