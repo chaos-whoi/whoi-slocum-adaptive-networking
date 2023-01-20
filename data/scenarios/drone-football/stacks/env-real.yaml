@@ -1,5 +1,5 @@
 ARCH=arm64v8
-WANDB_PROJECT=whoi-adanet-puerto-rico-2022
+WANDB_PROJECT=whoi-adanet-PR-2023-drone-football
 PROBLEM_FLAVOR=
 
 DRONE_OPTS=--logger wb
