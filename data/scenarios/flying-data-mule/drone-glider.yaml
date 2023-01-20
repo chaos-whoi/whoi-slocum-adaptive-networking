@@ -1,0 +1,7 @@
+links:
+    - interface: eth0
+
+channels:
+    - name: "/channel_1"
+      size: 10
+      kind: disk

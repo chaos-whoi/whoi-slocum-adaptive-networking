@@ -1,0 +1,8 @@
+links:
+    - interface: wlan0
+      server: "192.168.8.133"
+
+channels:
+    - name: "/channel_1"
+      size: 10
+      kind: disk

@@ -1,6 +1,7 @@
 links:
-    - interface: wlan1
-      server: "192.168.9.200"
+    - interface: ppp0
+      type: wifi-g
+      server: 192.168.9.200
 
 channels:
     - name: "/channel_1"

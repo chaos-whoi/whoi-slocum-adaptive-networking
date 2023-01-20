@@ -1,14 +1,15 @@
 ARCH=arm64v8
-WANDB_PROJECT=whoi-adanet-test
+WANDB_PROJECT=whoi-adanet-PR-2023-flying-data-mule
+PROBLEM_FLAVOR=
 
 GLIDER_OPTS=--simulation --logger wb
-GLIDER_NETWORK=container:computer0
+GLIDER_NETWORK=host
 
-GLIDER_DRONE_OPTS=--logger wb
-GLIDER_DRONE_NETWORK=container:computer1
+DRONE_GLIDER_OPTS=--logger wb
+DRONE_GLIDER_NETWORK=host
 
-DRONE_SHORE_OPTS=--logger wb
-DRONE_SHORE_NETWORK=container:computer1
+DRONE_FOOTBALL_OPTS=--logger wb
+DRONE_FOOTBALL_NETWORK=host
 
-SHORE_OPTS=--logger wb
-SHORE_NETWORK=container:computer2
+FOOTBALL_OPTS=--logger wb
+FOOTBALL_NETWORK=host

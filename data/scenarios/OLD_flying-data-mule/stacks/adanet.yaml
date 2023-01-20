@@ -6,13 +6,13 @@ services:
         container_name: glider
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 0
+            WANDB_OFFLINE: 1
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-        command: "source --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
+        command: "source --problem /problem/glider-drone.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
 
     drone-glider:
@@ -20,45 +20,39 @@ services:
         container_name: glider-to-drone
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 0
+            WANDB_OFFLINE: 1
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-            - type: bind
-              source: /tmp/queue
-              target: /tmp/queue
-        command: "sink --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
-        network_mode: ${DRONE_GLIDER_NETWORK}
+        command: "sink --problem /problem/glider-drone.yaml ${GLIDER_DRONE_OPTS}"
+        network_mode: ${GLIDER_DRONE_NETWORK}
 
-    drone-football:
+    drone-shore:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: drone-to-football
+        container_name: drone-to-shore
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 0
+            WANDB_OFFLINE: 1
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-            - type: bind
-              source: /tmp/queue
-              target: /tmp/queue
-        command: "source --problem /problem/drone-football{PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
-        network_mode: ${DRONE_FOOTBALL_NETWORK}
+        command: "source --problem /problem/drone-shore.yaml ${DRONE_SHORE_OPTS}"
+        network_mode: ${DRONE_SHORE_NETWORK}
 
-    football:
+    shore:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
-        container_name: football
+        container_name: shore
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: 0
+            WANDB_OFFLINE: 1
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-        command: "sink --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
-        network_mode: ${FOOTBALL_NETWORK}
+        command: "sink --problem /problem/drone-shore.yaml ${SHORE_OPTS}"
+        network_mode: ${SHORE_NETWORK}
