@@ -3,7 +3,7 @@ WANDB_PROJECT=whoi-adanet-test
 PROBLEM_FLAVOR=-isolated
 
 DRONE_OPTS=--simulation --logger wb
-DRONE_NETWORK=container:drone-shore_computer0_1
+DRONE_NETWORK=container:drone-shore-computer0-1
 
 SHORE_OPTS=--logger wb
-SHORE_NETWORK=container:drone-shore_computer1_1
+SHORE_NETWORK=container:drone-shore-computer1-1

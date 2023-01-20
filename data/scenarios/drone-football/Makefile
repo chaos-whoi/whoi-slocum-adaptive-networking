@@ -14,7 +14,7 @@ adanet-shore:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up shore
 
 adanet-simulated-isolated:
-	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated-isolated.yaml up
 
 drone-in-range:
 	@docker exec ${PROJECT}_ppp00_1 ip link set dev ppp0 up
