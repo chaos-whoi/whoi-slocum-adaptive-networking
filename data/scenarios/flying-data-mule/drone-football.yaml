@@ -1,37 +1,44 @@
 links:
-    - interface: wlan0
-      server: "192.168.8.133"
+    -   interface: wlan0
+        server: "192.168.8.133"
 
 channels:
     # Only for simulation
-    - name: "/channel_1"
-      size: 10
-      kind: disk
+    -   name: "/channel_1"
+        kind: disk
+        size: 10
+    
     # GPS-based latitude
     -   name: "/glider/extctl/sensors/g_gps_lat"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0
     # GPS-based longitude
     -   name: "/glider/extctl/sensors/g_gps_lon"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) latitude
     -   name: "/glider/extctl/sensors/g_lat"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) longitude
     -   name: "/glider/extctl/sensors/g_lon"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0
     -   name: "/glider/extctl/sensors/m_depth"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0
     -   name: "/glider/extctl/sensors/m_water_depth"
+        kind: disk
         qos:
             frequency: 10.0
             queue_size: 0

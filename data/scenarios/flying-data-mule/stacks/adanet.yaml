@@ -35,7 +35,7 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${GLIDER_DRONE_PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
+        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${GLIDER_DRONE_PROBLEM_FLAVOR}.yaml ${GLIDER_DRONE_OPTS}"
         network_mode: ${GLIDER_DRONE_NETWORK}
         stop_grace_period: 30s
 
