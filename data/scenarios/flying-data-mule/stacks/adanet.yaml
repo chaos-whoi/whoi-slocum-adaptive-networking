@@ -46,7 +46,7 @@ services:
             - type: bind
               source: ../queue
               target: /tmp/queue
-        command: "-- source --agent drone-to-football --problem /problem/drone-football{PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
+        command: "-- source --agent drone-to-football --problem /problem/drone-football${PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
 
     football:
