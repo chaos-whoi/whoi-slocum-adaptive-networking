@@ -29,6 +29,9 @@ class IPipe(ABC):
         if self._callback is None:
             return
         # update size
-        self._size = max(self._size, len(data))
+        if self._size is None:
+            self._size = len(data)
+        else:
+            self._size = max(self._size, len(data))
         # ---
         self._callback(data)

@@ -14,7 +14,7 @@ class Task(Shuttable):
     def __init__(self, period: float, target: Optional[Callable] = None):
         super(Task, self).__init__()
         self._period: float = period
-        self._paused: bool = False
+        self._paused: bool = period < 0
         self._target: Optional[Callable] = target
 
     @property

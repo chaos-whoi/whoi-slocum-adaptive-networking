@@ -13,12 +13,17 @@ class DiskSource(ISource):
     def __init__(self, name: str, size: int, *args, **kwargs):
         super(DiskSource, self).__init__(name=name, size=size, *args, **kwargs)
         self._db: Queue = Queue(QueueType.PERSISTENT, self.name, max_size=-1, multithreading=True)
-        self._task: Task = Task(Clock.period(1.0), self._queue_get)
+        # period = -1 means paused, the function set_solution_frequency below will resume if solution allows
+        self._task: Task = Task(Clock.period(-1), self._queue_get)
         loop.add_task(self._task)
 
     @property
     def frequency(self) -> float:
         return self._db.size / FORMULATE_PROBLEM_EVERY_SEC
+
+    @property
+    def queue_length(self) -> int:
+        return self._db.length
 
     @property
     def _is_time(self) -> bool:

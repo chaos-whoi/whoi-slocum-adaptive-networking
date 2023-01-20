@@ -5,7 +5,6 @@ channels:
     # Only for simulation
     -   name: "/channel_1"
         kind: disk
-        size: 10
 
     # GPS-based latitude
     -   name: "/glider/extctl/sensors/g_gps_lat"

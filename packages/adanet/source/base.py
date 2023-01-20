@@ -51,6 +51,8 @@ class ISource(IPipe):
         self._on_data(data)
 
     def _produce(self, data: bytes):
+        if self._size is None:
+            self._size = len(data)
         # TODO: maybe this is not correct, shouldn't we queue messages at max speed and only
         #  throttle the transmission? or we throttle the source so we queue at qos speed
         #  (think of an image stream, better to have a lower fps but larger temporal span
