@@ -1,11 +1,12 @@
 version: "2.4"
 services:
 
-    glider:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
+    glider-source:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: glider
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
@@ -14,15 +15,16 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- source --agent ${EXPERIMENT}_glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent glider --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
         stop_grace_period: 30s
 
-    glider-drone:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
+    drone-glider:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: glider-to-drone
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
@@ -33,15 +35,16 @@ services:
               target: /tmp/queue/persistent
               volume:
                 nocopy: true
-        command: "-- sink --agent ${EXPERIMENT}_glider-drone --problem /problem/glider-drone.yaml ${DRONE_OPTS}"
-        network_mode: ${DRONE_NETWORK}
+        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
+        network_mode: ${GLIDER_DRONE_NETWORK}
         stop_grace_period: 30s
 
-    drone-shore:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
+    drone-football:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: drone-to-football
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
@@ -52,22 +55,58 @@ services:
               target: /tmp/queue/persistent
               volume:
                   nocopy: true
-        command: "-- source --agent ${EXPERIMENT}_drone-shore --problem /problem/drone-shore.yaml ${DRONE_OPTS}"
-        network_mode: ${DRONE_NETWORK}
+        command: "-- source --agent drone-to-football --problem /problem/drone-football${PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
+        network_mode: ${DRONE_FOOTBALL_NETWORK}
         stop_grace_period: 30s
 
-    shore:
-        image: docker.io/ripl/whoi-slocum-adaptive-networking:master-${SHORE_ARCH:?ARCH_NOT_SET}
+    football-toughbook:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: football-to-toughbook
         environment:
             DEBUG: 0
-            WANDB_OFFLINE: ${WANDB_OFFLINE:?WANDB_OFFLINE_NOT_SET}
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            -   type: bind
+                source: ..
+                target: /problem
+            - type: volume
+              source: db
+              target: /tmp/queue/persistent
+              volume:
+                  nocopy: true
+        command: "-- source --agent football-to-toughbook --problem /problem/football-toughbook${PROBLEM_FLAVOR}.yaml ${FOOTBALL_TOUGHBOOK_OPTS}"
+        network_mode: ${FOOTBALL_TOUGHBOOK_NETWORK}
+        stop_grace_period: 30s
+
+    football-sink:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: football
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
             - type: bind
               source: ..
               target: /problem
-        command: "-- sink --agent ${EXPERIMENT}_shore --problem /problem/shore.yaml ${SHORE_OPTS}"
-        network_mode: ${SHORE_NETWORK}
+        command: "-- sink --agent football --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
+        network_mode: ${FOOTBALL_NETWORK}
+        stop_grace_period: 30s
+
+    toughbook-sink:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: toughbook
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            -   type: bind
+                source: ..
+                target: /problem
+        command: "-- sink --agent toughbook --problem /problem/toughbook${PROBLEM_FLAVOR}.yaml ${TOUGHBOOK_OPTS}"
+        network_mode: ${TOUGHBOOK_NETWORK}
         stop_grace_period: 30s
 
 volumes:

@@ -1,11 +1,47 @@
 links:
-    - interface: ppp0
-      type: wifi-g
-      server: 192.168.9.200
+    #- interface: wlan1
+    #  server: "192.168.8.133"
+    - interface: wlan2
+      server: "192.168.9.200"
 
 channels:
+    # Only for simulation. Needs to be commented out for non-sim    
     - name: "/channel_1"
       frequency: 30.0
       size: 10
       qos:
           frequency: 10.0
+    # # GPS-based latitude
+    # - name: "/glider/extctl/sensors/g_gps_lat"
+    #   frequency: 30.0
+    #   size: 10
+    #   qos:
+    #       frequency: 10.0
+    # # GPS-based longitude
+    # - name: "/glider/extctl/sensors/g_gps_lon"
+    #   frequency: 30.0
+    #   size: 10
+    #   qos:
+    #       frequency: 10.0
+    # # Estimated (dead-reckoned) latitude
+    # - name: "/glider/extctl/sensors/g_lat"
+    #   frequency: 30.0
+    #   size: 100
+    #   qos:
+    #       frequency: 10.0
+    # # Estimated (dead-reckoned) longitude
+    # - name: "/glider/extctl/sensors/g_lon"
+    #   frequency: 30.0
+    #   size: 100
+    #   qos:
+    #       frequency: 10.0
+    # - name: "/glider/extctl/sensors/m_depth"
+    #   frequency: 30.0
+    #   size: 100
+    #   qos:
+    #       frequency: 10.0
+    # - name: "/glider/extctl/sensors/m_water_depth"
+    #   frequency: 30.0
+    #   size: 10
+    #   qos:
+    #       frequency: 10.0

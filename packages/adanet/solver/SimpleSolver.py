@@ -42,7 +42,12 @@ class SimpleSolver(AbsSolver):
             # enough to transfer a single packet of the biggest channel in the current deltaT
             bandwidth: float = max(biggest_packet_size, link.bandwidth if link.bandwidth else 0)
             # - convert bandwidth into capacity
-            link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
+            # TODO: disabled because there is a bug
+            # link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
+
+
+            # print(link1.name, biggest_packet_size, bandwidth, FORMULATE_PROBLEM_EVERY_SEC, link.capacity)
+
             links.append(link)
         links.sort(key=lambda l: l.latency)
         # - allocate bandwidth to channels according to priority and bandwidth left
@@ -84,7 +89,7 @@ class SimpleSolver(AbsSolver):
                             break
 
                         enough_budget: bool = link.budget is None or link.budget >= channel.size
-                        enough_bw: bool = link.capacity >= channel.size
+                        enough_bw: bool = link.capacity is None or link.capacity >= channel.size
 
                         # DEBUG:
                         # print(packets_sent, packets_total,
@@ -97,7 +102,8 @@ class SimpleSolver(AbsSolver):
                             if link.budget:
                                 link.budget -= channel.size
                             # update link's capacity
-                            link.capacity -= channel.size
+                            if link.capacity:
+                                link.capacity -= channel.size
                             # assign 1 packet from `channel` to `link`
                             interfaces.append(link.interface)
                             packets_sent += 1

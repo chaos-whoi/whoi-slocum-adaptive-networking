@@ -1,0 +1,9 @@
+ARCH=arm64v8
+WANDB_PROJECT=whoi-adanet-PR-2023-drone-football-simulated
+PROBLEM_FLAVOR=
+
+DRONE_OPTS=--simulation --logger wb
+DRONE_NETWORK=host
+
+SHORE_OPTS=--logger wb
+SHORE_NETWORK=host

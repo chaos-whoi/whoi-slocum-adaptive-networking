@@ -1,40 +1,32 @@
 PROJECT=flying-data-mule
 
 
-virtual-network:
-	docker-compose -p ${PROJECT} -f ./stacks/virtual-network.yaml up
+adanet-glider:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up glider-source
 
-adanet-real:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up
+adanet-glider-simulated:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up glider-source
 
-adanet-simulated:
-	docker-compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
+adanet-drone-glider:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone-glider
 
-glider-in-range:
-	@docker exec ${PROJECT}_ppp1_0_1 ip link set dev ppp0 up
+adanet-drone-football:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone-football
 
-glider-out-of-range:
-	@docker exec ${PROJECT}_ppp1_0_1 ip link set dev ppp0 down
+adanet-drone:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone-glider drone-football
 
-shore-in-range:
-	@docker exec ${PROJECT}_ppp1_2_1 ip link set dev ppp1 up
+adanet-football-sink:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-sink
 
-shore-out-of-range:
-	@docker exec ${PROJECT}_ppp1_2_1 ip link set dev ppp1 down
+adanet-football-drone:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-drone
 
+adanet-football-toughbook:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-toughbook
 
+adanet-football:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-drone football-toughbook
 
-show-network-configuration:
-	@echo "- Connection 1 -----------------------------------------------------------------------"
-	@docker exec ppp00 tc class show dev ppp0
-	@docker exec ppp00 tc qdisc show dev ppp0
-	@echo "-------"
-	@docker exec ppp01 tc class show dev ppp0
-	@docker exec ppp01 tc qdisc show dev ppp0
-	@echo "- Connection 2 -----------------------------------------------------------------------"
-	@docker exec ppp10 tc class show dev ppp0
-	@docker exec ppp10 tc qdisc show dev ppp0
-	@echo "-------"
-	@docker exec ppp11 tc class show dev ppp0
-	@docker exec ppp11 tc qdisc show dev ppp0
-	@echo "--------------------------------------------------------------------------------------"
+adanet-toughbook-sink:
+	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up toughbook-sink

@@ -3,14 +3,9 @@ links:
       type: wifi-g
       server: 192.168.9.200
 
-    - interface: wlan0
-      type: wifi-g
-      server: 192.168.9.200
-
 channels:
-    - name: "/myrobot/camera_node/camera_info"
+    - name: "/channel_1"
       frequency: 30.0
       size: 10
       qos:
           frequency: 10.0
-          queue_size: -1

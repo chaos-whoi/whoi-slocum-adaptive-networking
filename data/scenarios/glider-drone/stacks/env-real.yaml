@@ -1,0 +1,9 @@
+ARCH=amd64
+WANDB_PROJECT=whoi-adanet-PR-2023-glider-drone
+PROBLEM_FLAVOR=
+
+DRONE_OPTS=--logger wb
+DRONE_NETWORK=host
+
+SHORE_OPTS=--logger wb
+SHORE_NETWORK=host

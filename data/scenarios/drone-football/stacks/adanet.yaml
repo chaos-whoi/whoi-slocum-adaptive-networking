@@ -1,0 +1,30 @@
+version: "2.4"
+services:
+
+    drone:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: drone
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- source --agent drone --problem /problem/drone${PROBLEM_FLAVOR}.yaml ${DRONE_OPTS}"
+        network_mode: ${DRONE_NETWORK}
+
+    shore:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: shore
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- sink --agent shore --problem /problem/shore${PROBLEM_FLAVOR}.yaml ${SHORE_OPTS}"
+        network_mode: ${SHORE_NETWORK}

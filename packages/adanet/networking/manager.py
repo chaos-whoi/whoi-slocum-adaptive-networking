@@ -200,22 +200,31 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
     def get_devices(self) -> List[Tuple[str, str]]:
         devices: Dict[str, str] = {}
         # get wifi devices
-        for netdev in self._iw.get_interfaces_dict().keys():
-            if netdev is None:
+        iw_devs = self._iw.get_interfaces_dict().keys()
+        iw_devs_names = []
+        for netdev in iw_devs:
+            if not netdev:
                 continue
             devices[netdev] = "wifi"
+            iw_devs_names.append(netdev)
         # get all other devices
-        for netdev in self._ip.get_links():
-            if netdev is None:
+        any_devs = self._ip.get_links()
+        any_devs_names = []
+        for netdev in any_devs:
+            if not netdev:
                 continue
             name: str = netdev.get_attr('IFLA_IFNAME')
             link = netdev.get_attr('IFLA_LINKINFO')
             if link is not None:
                 link = link.get_attr('IFLA_INFO_KIND')
                 devices[name] = link
-            else:
-                # TODO: this is here because Andrea's thinkpad has an eth device that does not pass the test
+                any_devs_names.append(name)
+            elif "eth" in name or "eno" in name:
+                # TODO: this is to avoid cases where IPRoute() fails at finding the devices' information
                 devices[name] = "veth"
+                any_devs_names.append(name)
+        # print(f"Generic IP devices found: {any_devs_names}")
+        # print(f"Wifi devices found: {iw_devs_names}")
         # if a problem is given and the 'links' are populated, stick to those links
         if self._whitelisted_links is not None:
             for device in list(devices.keys()):

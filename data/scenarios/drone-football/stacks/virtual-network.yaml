@@ -1,0 +1,93 @@
+version: "2.4"
+services:
+
+    serial0:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        environment:
+            CPK_LAUNCHER: virtual-serials-pair
+            PORT_A: /dev/ttyV00
+            PORT_B: /dev/ttyV01
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    serial1:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        environment:
+            CPK_LAUNCHER: virtual-serials-pair
+            PORT_A: /dev/ttyV10
+            PORT_B: /dev/ttyV11
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    computer0: &computer
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        environment:
+            CPK_LAUNCHER: sleep
+        command: -- infinity
+
+    computer1:
+        <<: *computer
+
+    ppp00: &ppp0
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        depends_on:
+            -   serial0
+        network_mode: service:computer0
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV00
+            BAUD_RATE: 115200
+            NET_IFACE: 0
+            LOCAL_IP: 10.0.0.1
+            REMOTE_IP: 10.0.0.2
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    ppp01:
+        <<: *ppp0
+        network_mode: service:computer1
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV01
+            BAUD_RATE: 115200
+            NET_IFACE: 0
+            LOCAL_IP: 10.0.0.2
+            REMOTE_IP: 10.0.0.1
+
+    ppp10: &ppp1
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        depends_on:
+            -   serial1
+        network_mode: service:computer0
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV10
+            BAUD_RATE: 115200
+            NET_IFACE: 1
+            LOCAL_IP: 10.0.1.1
+            REMOTE_IP: 10.0.1.2
+        privileged: true
+        volumes:
+            -   type: bind
+                source: /dev
+                target: /dev
+
+    ppp11:
+        <<: *ppp1
+        network_mode: service:computer1
+        environment:
+            CPK_LAUNCHER: ppp-on-serial
+            PORT: /dev/ttyV11
+            BAUD_RATE: 115200
+            NET_IFACE: 1
+            LOCAL_IP: 10.0.1.2
+            REMOTE_IP: 10.0.1.1

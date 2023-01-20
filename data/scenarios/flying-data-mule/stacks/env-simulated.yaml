@@ -1,16 +1,21 @@
-EXPERIMENT=flying-data-mule
-
-WANDB_OFFLINE=0
-WANDB_PROJECT=whoi-adanet-test
-
-GLIDER_ARCH=amd64
-DRONE_ARCH=amd64
-SHORE_ARCH=amd64
-
-GLIDER_NETWORK=container:flying-data-mule_computer0_1
-DRONE_NETWORK=container:flying-data-mule_computer1_1
-SHORE_NETWORK=container:flying-data-mule_computer2_1
+ARCH=arm64v8
+WANDB_PROJECT=whoi-adanet-PR-2023-flying-data-mule
+PROBLEM_FLAVOR=
 
 GLIDER_OPTS=--simulation --logger wb
-DRONE_OPTS=--logger wb
-SHORE_OPTS=--logger wb
+GLIDER_NETWORK=host
+
+DRONE_GLIDER_OPTS=--logger wb
+DRONE_GLIDER_NETWORK=host
+
+DRONE_FOOTBALL_OPTS=--logger wb
+DRONE_FOOTBALL_NETWORK=host
+
+FOOTBALL_OPTS=--logger wb
+FOOTBALL_NETWORK=host
+
+TOUGHBOOK_OPTS=--logger wb
+TOUGHBOOK_NETWORK=host
+
+FOOTBALL_TOUGHBOOK_OPTS=--logger wb
+FOOTBALL_TOUGHBOOK_NETWORK=host
