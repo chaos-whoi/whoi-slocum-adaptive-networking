@@ -13,7 +13,7 @@ adanet-drone:
 adanet-shore:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up shore
 
-adanet-simulated:
+adanet-simulated-isolated:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-simulated.yaml up
 
 drone-in-range:
