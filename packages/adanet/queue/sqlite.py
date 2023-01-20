@@ -53,8 +53,9 @@ class Queue(IQueue, SQLiteQueue):
     def get(self, block: bool = True, timeout: Optional[float] = None, default: Any = None) -> \
             Optional[bytes]:
         try:
+            data = SQLiteQueue.get(self, block=block, timeout=timeout)
             self._length -= 1
-            return SQLiteQueue.get(self, block=block, timeout=timeout)
+            return data
         except Empty:
             return default
 
