@@ -1,6 +1,6 @@
 links:
-    - interface: wlan0
-      server: "192.168.8.100"
+    - interface: wlan2
+      server: "192.168.9.200"
 
 channels:
     - name: "/channel_1"

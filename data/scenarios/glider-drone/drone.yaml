@@ -1,5 +1,5 @@
 links:
-    - interface: eno1
+    - interface: eth0
 
 channels:
     - name: "/channel_1"
