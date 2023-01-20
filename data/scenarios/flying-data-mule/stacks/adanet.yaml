@@ -12,7 +12,7 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "source --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
+        command: "-- source --agent glider --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
 
     drone-glider:
@@ -29,7 +29,7 @@ services:
             - type: bind
               source: /tmp/queue
               target: /tmp/queue
-        command: "sink --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
+        command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
         network_mode: ${DRONE_GLIDER_NETWORK}
 
     drone-football:
@@ -46,7 +46,7 @@ services:
             - type: bind
               source: /tmp/queue
               target: /tmp/queue
-        command: "source --problem /problem/drone-football{PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
+        command: "-- source --agent drone-to-football --problem /problem/drone-football{PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
 
     football:
@@ -60,5 +60,5 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "sink --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
+        command: "-- sink --agent football --problem /problem/football${PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
         network_mode: ${FOOTBALL_NETWORK}
