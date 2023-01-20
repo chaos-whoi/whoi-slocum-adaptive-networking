@@ -27,7 +27,7 @@ services:
               source: ..
               target: /problem
             - type: bind
-              source: /tmp/queue
+              source: ./queue
               target: /tmp/queue
         command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${PROBLEM_FLAVOR}.yaml ${DRONE_GLIDER_OPTS}"
         network_mode: ${DRONE_GLIDER_NETWORK}
@@ -44,7 +44,7 @@ services:
               source: ..
               target: /problem
             - type: bind
-              source: /tmp/queue
+              source: ./queue
               target: /tmp/queue
         command: "-- source --agent drone-to-football --problem /problem/drone-football{PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
