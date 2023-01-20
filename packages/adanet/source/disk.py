@@ -14,7 +14,7 @@ class DiskSource(ISource):
         super(DiskSource, self).__init__(name=name, size=size, *args, **kwargs)
         self._db: Queue = Queue(QueueType.PERSISTENT, self.name, max_size=-1, multithreading=True)
         # period = -1 means paused, the function set_solution_frequency below will resume if solution allows
-        self._task: Task = Task(Clock.period(-1), self._queue_get)
+        self._task: Task = Task(Clock.period(1.0), self._queue_get)
         loop.add_task(self._task)
 
     @property
