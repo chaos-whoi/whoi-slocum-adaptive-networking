@@ -1,9 +1,10 @@
-ARCH=amd64
 WANDB_PROJECT=whoi-adanet-PR-2023-glider-drone-simulated-isolated
 PROBLEM_FLAVOR=-isolated
 
-DRONE_OPTS=--simulation --logger wb
-DRONE_NETWORK=container:glider-drone-computer0-1
+GLIDER_ARCH=arm64v8
+GLIDER_OPTS=--simulation --logger wb
+GLIDER_NETWORK=container:glider-drone-computer0-1
 
-SHORE_OPTS=--logger wb
-SHORE_NETWORK=container:glider-drone-computer1-1
+DRONE_ARCH=arm64v8
+DRONE_OPTS=--logger wb
+DRONE_NETWORK=container:glider-drone-computer1-1

@@ -2,7 +2,7 @@ version: "2.4"
 services:
 
     glider:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
         container_name: glider
         environment:
             DEBUG: 0
@@ -12,11 +12,11 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- source --agent glider --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${DRONE_OPTS}"
-        network_mode: ${DRONE_NETWORK}
+        command: "-- source --agent glider --problem /problem/glider${PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
+        network_mode: ${GLIDER_NETWORK}
 
     drone:
-        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
         container_name: drone
         environment:
             DEBUG: 0
@@ -26,5 +26,5 @@ services:
             - type: bind
               source: ..
               target: /problem
-        command: "-- sink --agent drone --problem /problem/drone${PROBLEM_FLAVOR}.yaml ${SHORE_OPTS}"
-        network_mode: ${SHORE_NETWORK}
+        command: "-- sink --agent drone --problem /problem/drone${PROBLEM_FLAVOR}.yaml ${DRONE_OPTS}"
+        network_mode: ${DRONE_NETWORK}
