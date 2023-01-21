@@ -6,22 +6,22 @@ links:
 
 channels:
     # GPS-based latitude
-    -   name: "/glider/extctl/sensors/g_gps_lat"
+    -   name: "/glider/extctl/sensors/m_gps_lat"
         qos:
             frequency: 10.0
             queue_size: 0
     # GPS-based longitude
-    -   name: "/glider/extctl/sensors/g_gps_lon"
+    -   name: "/glider/extctl/sensors/m_gps_lon"
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) latitude
-    -   name: "/glider/extctl/sensors/g_lat"
+    -   name: "/glider/extctl/sensors/m_lat"
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) longitude
-    -   name: "/glider/extctl/sensors/g_lon"
+    -   name: "/glider/extctl/sensors/m_lon"
         qos:
             frequency: 10.0
             queue_size: 0

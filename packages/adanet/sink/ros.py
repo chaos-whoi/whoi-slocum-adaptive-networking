@@ -1,5 +1,5 @@
 from .base import ISink
-
+import time
 
 class ROSSink(ISink):
 
@@ -12,5 +12,5 @@ class ROSSink(ISink):
 
     def recv(self, data: bytes):
         # TODO: publish to ROS topic here
-        print(f"RECEIVED DATA: {len(data)} bytes")
+        print(f"[{time.time()}] RECEIVED DATA: {len(data)} bytes")
         pass
