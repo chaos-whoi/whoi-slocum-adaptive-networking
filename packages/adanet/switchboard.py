@@ -50,7 +50,7 @@ class Switchboard(Shuttable, ISwitchboard):
                                          frequency=channel.frequency,
                                          queue_size=queue_size,
                                          qos=channel.qos,
-                                         arguments=channel.arguments)
+                                         arguments=channel.arguments or {})
                 source.register_callback(partial(self._send, channel.name))
                 self._sources[channel.name] = source
 
@@ -59,7 +59,8 @@ class Switchboard(Shuttable, ISwitchboard):
             for channel in problem.channels:
                 Sink: Type[ISink] = self._sink(channel)
                 sink: ISink = Sink(name=channel.name,
-                                   size=channel.size)
+                                   size=channel.size,
+                                   arguments=channel.arguments or {})
                 self._sinks[channel.name] = sink
 
         # create switchboard monitor task

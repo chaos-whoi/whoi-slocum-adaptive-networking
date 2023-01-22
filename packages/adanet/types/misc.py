@@ -68,7 +68,9 @@ class Shuttable:
                 self.shutdown()
 
             # register as SIGINT and SIGTERM signal handler
+            print("Registering for shutdown signals SIGINT...")
             signal.signal(signal.SIGINT, handler)
+            print("Registering for shutdown signals SIGTERM...")
             signal.signal(signal.SIGTERM, handler)
 
         try:
