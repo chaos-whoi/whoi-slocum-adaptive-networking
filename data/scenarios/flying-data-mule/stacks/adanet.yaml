@@ -8,10 +8,8 @@ services:
             DEBUG: 0
             WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+            ROS_MASTER_URI: http://ros-master:11311
         volumes:
-            - type: bind
-              source: /var/run/avahi-daemon/socket
-              target: /var/run/avahi-daemon/socket
             - type: bind
               source: ..
               target: /problem
