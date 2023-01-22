@@ -4,7 +4,7 @@ WANDB_PROJECT=whoi-adanet-PR-2023-flying-data-mule
 # Sources
 
 GLIDER_OPTS=--logger wb
-GLIDER_NETWORK=host
+GLIDER_NETWORK=slocum_glider_images_ros
 GLIDER_PROBLEM_FLAVOR=
 
 # Intermediate hops

@@ -8,10 +8,8 @@ services:
             DEBUG: 0
             WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+            ROS_MASTER_URI: http://ros-master:11311
         volumes:
-            - type: bind
-              source: /var/run/avahi-daemon/socket
-              target: /var/run/avahi-daemon/socket
             - type: bind
               source: ..
               target: /problem
@@ -59,6 +57,26 @@ services:
         network_mode: ${DRONE_FOOTBALL_NETWORK}
         stop_grace_period: 30s
 
+    football-drone:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
+        container_name: drone-to-football
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+            - type: volume
+              source: db
+              target: /tmp/queue/persistent
+              volume:
+                nocopy: true
+        command: "-- sink --agent drone-to-football --problem /problem/football-drone${DRONE_FOOTBALL_PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
+        network_mode: ${DRONE_FOOTBALL_NETWORK}
+        stop_grace_period: 30s
+    
     football-toughbook:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
         container_name: football-to-toughbook
