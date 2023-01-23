@@ -4,6 +4,7 @@ from typing import Type, Dict, Any
 import rospy
 import rostopic
 
+from adanet.exceptions import ROSTopicNotFound
 from adanet.types import Shuttable
 
 
@@ -47,7 +48,7 @@ class ROS:
     def get_message_type(cls, topic: str) -> Type[rospy.msg.AnyMsg]:
         msgtype, _, _ = rostopic.get_topic_type(topic)
         if msgtype is None:
-            raise ValueError(f"Topic '{topic}' not found")
+            raise ROSTopicNotFound(f"Topic '{topic}' not found")
         return cls.load_message_type(msgtype)
 
     @classmethod

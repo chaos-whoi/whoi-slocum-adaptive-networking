@@ -8,3 +8,7 @@ class InvalidStateError(Exception):
 
 class StopTaskException(Exception):
     pass
+
+
+class ROSTopicNotFound(Exception):
+    pass

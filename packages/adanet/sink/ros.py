@@ -22,7 +22,7 @@ class ROSSink(ISink):
                              f"'message_type' in the problem definition")
         # register against the ROS network
         ROS.register()
-        # get message type for arguments
+        # get message type from arguments
         self.MsgType: Type[AnyMsg] = ROS.load_message_type(self._arguments["message_type"])
 
         # create publisher
