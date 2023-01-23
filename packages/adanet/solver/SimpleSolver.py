@@ -92,8 +92,8 @@ class SimpleSolver(AbsSolver):
                                 links_iter: Iterator[Link] = infinite_iterator(slow_links)
                             break
 
-                        enough_budget: bool = link.budget is None or (link.budget is not None and link.budget >= channel.size)
-                        enough_bw: bool = link.capacity is None or (link.capacity is not None and link.capacity >= channel.size)
+                        enough_budget: bool = link.budget is None or ((link.budget is not None) and (link.budget >= channel.size))
+                        enough_bw: bool = link.capacity is None or ((link.capacity is not None) and (link.capacity >= channel.size))
 
                         # DEBUG:
                         # print(packets_sent, packets_total,
