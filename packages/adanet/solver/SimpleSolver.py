@@ -41,9 +41,13 @@ class SimpleSolver(AbsSolver):
             # to avoid getting stuck in a bandwidth=0 situation, assume bandwidth is always good
             # enough to transfer a single packet of the biggest channel in the current deltaT
             bandwidth: float = max(biggest_packet_size, link.bandwidth if link.bandwidth else 0)
+
+            # TODO: test PR 2023
+            bandwidth = max(2048.0, bandwidth)
+
             # - convert bandwidth into capacity
-            # TODO: disabled because there is a bug
-            # link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
+            # TODO: there is a bug here
+            link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
 
 
             # print(link1.name, biggest_packet_size, bandwidth, FORMULATE_PROBLEM_EVERY_SEC, link.capacity)
