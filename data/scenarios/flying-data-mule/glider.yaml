@@ -7,29 +7,41 @@ links:
 channels:
     # GPS-based latitude
     -   name: "/glider/extctl/sensors/m_gps_lat"
+        arguments:
+            message_type: "std_msgs/Float64"
         qos:
             frequency: 10.0
             queue_size: 0
     # GPS-based longitude
     -   name: "/glider/extctl/sensors/m_gps_lon"
+        arguments:
+            message_type: "std_msgs/Float64"
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) latitude
     -   name: "/glider/extctl/sensors/m_lat"
+        arguments:
+            message_type: "std_msgs/Float64"
         qos:
             frequency: 10.0
             queue_size: 0
     # Estimated (dead-reckoned) longitude
     -   name: "/glider/extctl/sensors/m_lon"
+        arguments:
+            message_type: "std_msgs/Float64"
         qos:
             frequency: 10.0
             queue_size: 0
     -   name: "/glider/extctl/sensors/m_depth"
+        arguments:
+            message_type: "std_msgs/Float32"
         qos:
             frequency: 10.0
             queue_size: 0
     -   name: "/glider/extctl/sensors/m_water_depth"
+        arguments:
+            message_type: "std_msgs/Float32"
         qos:
             frequency: 10.0
             queue_size: 0
