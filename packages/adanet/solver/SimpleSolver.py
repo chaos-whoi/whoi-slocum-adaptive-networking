@@ -54,9 +54,11 @@ class SimpleSolver(AbsSolver):
         for channels in channel_groups:
             for channel in channels:
                 interfaces: List[str] = []
+                frequency: float = 0
                 # frequency is either the QoS frequency (if given) or the original frequency
-                frequency: float = channel.qos.frequency \
-                    if (channel.qos and channel.qos.frequency) else channel.frequency
+                if channel.frequency is not None and channel.frequency > 0:
+                    frequency: float = channel.qos.frequency \
+                        if (channel.qos and channel.qos.frequency) else channel.frequency
                 packets_total: int = channel.queue_length + \
                                      int(frequency * FORMULATE_PROBLEM_EVERY_SEC)
                 packets_sent: int = 0

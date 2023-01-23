@@ -8,18 +8,14 @@ services:
             DEBUG: 0
             WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
-            ROS_MASTER_URI: http://localhost:11311
         volumes:
             - type: bind
               source: ..
               target: /problem
-        ports:
-            - 12345:12345
-            - 12346:12346
         privileged: true
         command: "-- source --agent glider --problem /problem/glider${GLIDER_PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
     drone-glider:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -39,7 +35,7 @@ services:
                 nocopy: true
         command: "-- sink --agent glider-to-drone --problem /problem/drone-glider${GLIDER_DRONE_PROBLEM_FLAVOR}.yaml ${GLIDER_DRONE_OPTS}"
         network_mode: ${GLIDER_DRONE_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
     drone-football:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -59,7 +55,7 @@ services:
                   nocopy: true
         command: "-- source --agent drone-to-football --problem /problem/drone-football${DRONE_FOOTBALL_PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
     football-drone:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -79,7 +75,7 @@ services:
                 nocopy: true
         command: "-- sink --agent drone-to-football --problem /problem/football-drone${DRONE_FOOTBALL_PROBLEM_FLAVOR}.yaml ${DRONE_FOOTBALL_OPTS}"
         network_mode: ${DRONE_FOOTBALL_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
     
     football-toughbook:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -99,7 +95,7 @@ services:
                   nocopy: true
         command: "-- source --agent football-to-toughbook --problem /problem/football-toughbook${FOOTBALL_TOUGHBOOK_PROBLEM_FLAVOR}.yaml ${FOOTBALL_TOUGHBOOK_OPTS}"
         network_mode: ${FOOTBALL_TOUGHBOOK_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
     football-sink:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -114,7 +110,7 @@ services:
               target: /problem
         command: "-- sink --agent football --problem /problem/football${FOOTBALL_PROBLEM_FLAVOR}.yaml ${FOOTBALL_OPTS}"
         network_mode: ${FOOTBALL_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
     toughbook-sink:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${ARCH:?ARCH_NOT_SET}
@@ -129,7 +125,7 @@ services:
                 target: /problem
         command: "-- sink --agent toughbook --problem /problem/toughbook${TOUGHBOOK_PROBLEM_FLAVOR}.yaml ${TOUGHBOOK_OPTS}"
         network_mode: ${TOUGHBOOK_NETWORK}
-        stop_grace_period: 30s
+        stop_grace_period: 10s
 
 volumes:
     db:

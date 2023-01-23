@@ -14,6 +14,7 @@ adanet-drone-football:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone-football
 
 adanet-drone:
+	docker volume rm ${PROJECT}_db || :
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up drone-glider drone-football
 
 adanet-football-sink:
@@ -26,6 +27,7 @@ adanet-football-toughbook:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-toughbook
 
 adanet-football:
+	docker volume rm ${PROJECT}_db || :
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env-real.yaml up football-drone football-toughbook
 
 adanet-toughbook-sink:
