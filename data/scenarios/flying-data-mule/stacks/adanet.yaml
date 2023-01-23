@@ -13,6 +13,10 @@ services:
             - type: bind
               source: ..
               target: /problem
+        ports:
+            - 12345:12345
+            - 12346:12346
+        privileged: true
         command: "-- source --agent glider --problem /problem/glider${GLIDER_PROBLEM_FLAVOR}.yaml ${GLIDER_OPTS}"
         network_mode: ${GLIDER_NETWORK}
         stop_grace_period: 30s
