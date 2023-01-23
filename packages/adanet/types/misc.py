@@ -242,3 +242,28 @@ class MonitoredCondition(Condition):
             self._has_changes = False
             return True
         return super(MonitoredCondition, self).wait(timeout=timeout)
+
+
+class MaxWindow:
+
+    def __init__(self, size: int = 5):
+        self._size: int = size
+        # noinspection PyTypeChecker
+        self._data: List[Optional[float]] = [0.0] + ([None] * (size - 1))
+        self._cursor: int = 0
+        self._lock: Semaphore = Semaphore()
+
+    def add(self, value: float):
+        with self._lock:
+            self._data[self._cursor] = value
+            self._cursor = (self._cursor + 1) % self._size
+
+    @property
+    def value(self) -> float:
+        with self._lock:
+            return max([v for v in self._data if v is not None])
+
+    @property
+    def last(self) -> float:
+        with self._lock:
+            return self._data[self._cursor]

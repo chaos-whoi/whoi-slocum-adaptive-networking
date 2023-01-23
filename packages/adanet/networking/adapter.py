@@ -28,7 +28,7 @@ from ..time import Clock
 from ..types import Shuttable
 from ..types.agent import AgentRole
 from ..types.message import Message
-from ..types.misc import Reminder
+from ..types.misc import Reminder, MaxWindow
 from ..types.network import NetworkDevice, IAdapter, INetworkManager
 from ..zeroconf import zc
 from ..zeroconf.services import NetworkPeerService
@@ -50,9 +50,9 @@ class Adapter(Shuttable, IAdapter, ABC):
         # internal state
         self._present: bool = True
         self._has_ping: bool = False
-        self._bandwidth_in: float = 0.0
-        self._bandwidth_out: float = 0.0
         self._latency: float = 0.0
+        self._bandwidth_in: MaxWindow = MaxWindow()
+        self._bandwidth_out: MaxWindow = MaxWindow()
         self._device: NetworkDevice = device
         self._remote: Optional[IPv4Address] = remote
         self._pipe: Pipe = Pipe()
@@ -266,11 +266,11 @@ class Adapter(Shuttable, IAdapter, ABC):
 
     @property
     def bandwidth_in(self) -> float:
-        return self._bandwidth_in
+        return self._bandwidth_in.last
 
     @property
     def bandwidth_out(self) -> float:
-        return self._bandwidth_out
+        return self._bandwidth_out.last
 
     @property
     def latency(self) -> float:
@@ -282,8 +282,8 @@ class Adapter(Shuttable, IAdapter, ABC):
         :param value: new value for IN bandwidth in bytes/sec
         :return: old value for bandwidth in bytes/sec
         """
-        old = self._bandwidth_in
-        self._bandwidth_in = value
+        old = self._bandwidth_in.last
+        self._bandwidth_in.add(value)
         return old
 
     def set_bandwidth_out(self, value: float) -> float:
@@ -292,8 +292,8 @@ class Adapter(Shuttable, IAdapter, ABC):
         :param value: new value for OUT bandwidth in bytes/sec
         :return: old value for bandwidth in bytes/sec
         """
-        old = self._bandwidth_out
-        self._bandwidth_out = value
+        old = self._bandwidth_out.last
+        self._bandwidth_out.add(value)
         return old
 
     def set_latency(self, value: float) -> float:
@@ -324,9 +324,8 @@ class Adapter(Shuttable, IAdapter, ABC):
         if (not self.is_active) or (not self.has_link):
             return 0
         # TODO: here we should include the effect of missing transfers from last session to lower optimism and detect ceilings
-        # TODO: we shouldn't react so quickly on the registered bandwidth, we should keep some memory of good sessions
         projection: float = 1 + IFACE_BANDWIDTH_OPTIMISM
-        return max(IFACE_MIN_BANDWIDTH_BYTES_SEC, self._bandwidth_in * projection)
+        return max(IFACE_MIN_BANDWIDTH_BYTES_SEC, self._bandwidth_in.value * projection)
 
     @property
     def estimated_bandwidth_out(self) -> float:
@@ -337,9 +336,8 @@ class Adapter(Shuttable, IAdapter, ABC):
         if (not self.is_active) or (not self.has_link):
             return 0
         # TODO: here we should include the effect of missing transfers from last session to lower optimism and detect ceilings
-        # TODO: we shouldn't react so quickly on the registered bandwidth, we should keep some memory of good sessions
         projection: float = 1 + IFACE_BANDWIDTH_OPTIMISM
-        return max(IFACE_MIN_BANDWIDTH_BYTES_SEC, self._bandwidth_out * projection)
+        return max(IFACE_MIN_BANDWIDTH_BYTES_SEC, self._bandwidth_out.value * projection)
 
     def __del__(self):
         if hasattr(self, "_zeroconf_srv") and self._zeroconf_srv is not None:

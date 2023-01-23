@@ -42,13 +42,9 @@ class SimpleSolver(AbsSolver):
             # enough to transfer a single packet of the biggest channel in the current deltaT
             bandwidth: float = max(biggest_packet_size, link.bandwidth if link.bandwidth else 0)
 
-            # TODO: test PR 2023
-            bandwidth = max(2048.0, bandwidth)
-
             # - convert bandwidth into capacity
             # TODO: there is a bug here
             link.capacity = bandwidth * FORMULATE_PROBLEM_EVERY_SEC
-
 
             # print(link1.name, biggest_packet_size, bandwidth, FORMULATE_PROBLEM_EVERY_SEC, link.capacity)
 
@@ -58,9 +54,12 @@ class SimpleSolver(AbsSolver):
         for channels in channel_groups:
             for channel in channels:
                 interfaces: List[str] = []
-                # frequency is either the QoS frequency (if given) or the original frequency
-                frequency: float = channel.qos.frequency \
+                # QoS frequency is either the given QoS frequency or the original frequency
+                qos_frequency: float = channel.qos.frequency \
                     if (channel.qos and channel.qos.frequency) else channel.frequency
+                # problem frequency is the minimum between QoS and current
+                frequency: float = min(qos_frequency, channel.frequency) if channel.frequency else 0.0
+                # how many packets we have to transfer
                 packets_total: int = channel.queue_length + \
                                      int(frequency * FORMULATE_PROBLEM_EVERY_SEC)
                 packets_sent: int = 0
@@ -92,21 +91,11 @@ class SimpleSolver(AbsSolver):
                                 links_iter: Iterator[Link] = infinite_iterator(slow_links)
                             break
 
-                        enough_budget = False
-                        if (link.budget is not None) and (channel.size is not None):
-                            if link.budget >= channel.size:
-                                enough_budget = True
-
-                        enough_bw = False
-                        if (link.capacity is not None) and (channel.size is not None):
-                            if link.capacity >= channel.size:
-                                enough_bw = True
-
-                        # enough_budget: bool = link.budget is None or ((link.budget is not None) and (link.budget >= channel.size))
-                        # enough_bw: bool = link.capacity is None or ((link.capacity is not None) and (link.capacity >= channel.size))
+                        enough_budget: bool = link.budget is None or ((link.budget is not None) and (link.budget >= channel.size))
+                        enough_bw: bool = link.capacity is None or ((link.capacity is not None) and (link.capacity >= channel.size))
 
                         # DEBUG:
-                        # print(packets_sent, packets_total,
+                        # print("-", link.interface, packets_sent, packets_total,
                         #       link.budget, link.capacity,
                         #       enough_budget, enough_bw)
                         # DEBUG:
@@ -132,6 +121,7 @@ class SimpleSolver(AbsSolver):
                     #       just the capacity, this is not correct, we should compute the link
                     #       usage over time and avoid spikes in the usage that overshoot the
                     #       bandwidth
+                    # interfaces=interfaces,
                     interfaces=self._compact_sequence(interfaces),
                     problem=channel,
                 )
