@@ -54,6 +54,17 @@ class SimpleSolver(AbsSolver):
         for channels in channel_groups:
             for channel in channels:
                 interfaces: List[str] = []
+                # we can't solve channels for which we have no information about the packet size
+                if channel.size is None:
+                    # add empty assignment to the solution
+                    solution.assignments.append(SolvedChannel(
+                        name=channel.name,
+                        frequency=0,
+                        interfaces=[],
+                        problem=channel,
+                    ))
+                    continue
+
                 # QoS frequency is either the given QoS frequency or the original frequency
                 qos_frequency: float = channel.qos.frequency \
                     if (channel.qos and channel.qos.frequency) else channel.frequency
