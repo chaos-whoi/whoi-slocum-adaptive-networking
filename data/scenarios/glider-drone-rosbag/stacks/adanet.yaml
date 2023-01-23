@@ -1,0 +1,46 @@
+version: "2.4"
+services:
+
+    roscore:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
+        command: "roscore"
+        network_mode: ${GLIDER_NETWORK}
+
+    rosbag:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
+        volumes:
+            - type: bind
+              source: ../bags
+              target: /bags
+        depends_on:
+            -   roscore
+        command: "rosbag play --loop /bags/2023-01-23-17-39-10.bag"
+        network_mode: ${GLIDER_NETWORK}
+
+    glider:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        depends_on:
+            -   rosbag
+        command: "-- source --agent glider --problem /problem/glider.yaml ${GLIDER_OPTS}"
+        network_mode: ${GLIDER_NETWORK}
+
+    drone:
+        image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${DRONE_ARCH:?ARCH_NOT_SET}
+        environment:
+            DEBUG: 0
+            WANDB_OFFLINE: 0
+            WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
+        volumes:
+            - type: bind
+              source: ..
+              target: /problem
+        command: "-- sink --agent drone --problem /problem/drone.yaml ${DRONE_OPTS}"
+        network_mode: ${DRONE_NETWORK}
