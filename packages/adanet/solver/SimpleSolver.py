@@ -93,12 +93,12 @@ class SimpleSolver(AbsSolver):
                             break
 
                         enough_budget = False
-                        if link.budget is not None:
+                        if (link.budget is not None) and (channel.size is not None):
                             if link.budget >= channel.size:
                                 enough_budget = True
 
                         enough_bw = False
-                        if link.capacity is not None:
+                        if (link.capacity is not None) and (channel.size is not None):
                             if link.capacity >= channel.size:
                                 enough_bw = True
 
