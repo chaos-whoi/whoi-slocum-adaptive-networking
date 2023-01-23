@@ -12,6 +12,10 @@ services:
             - type: bind
               source: ..
               target: /problem
+        ports:
+            - 12345:12345
+            - 12346:12346
+        privileged: true
         command: "-- source --agent drone --problem /problem/drone${PROBLEM_FLAVOR}.yaml ${DRONE_OPTS}"
         network_mode: ${DRONE_NETWORK}
 
