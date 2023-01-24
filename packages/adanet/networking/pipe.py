@@ -44,7 +44,7 @@ class Pipe(Shuttable, Thread):
         return self._inited
 
     def _configure(self):
-        # avoids "witing till ever" for a dead-peer on an already disconnected interconnect
+        # avoids "waiting till ever" for a dead-peer on an already disconnected interconnect
         self._pub.setsockopt(zmq.LINGER, 0)
         # prevents buffering messages for a "later" delivery on not transmission-ready connections
         self._pub.setsockopt(zmq.IMMEDIATE, 1)
@@ -93,6 +93,9 @@ class Pipe(Shuttable, Thread):
         self._sub.connect(address)
         print(f"SUB connected to {address}")
         self._configure()
+
+    def reconnect(self, server: str, pub_port: Optional[int] = None, sub_port: Optional[int] = None):
+        self.connect(server, pub_port, sub_port)
 
     def _send(self, data: bytes):
         with self._lock:

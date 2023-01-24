@@ -11,7 +11,7 @@ adanet-drone:
 	docker compose -p ${PROJECT} -f ./stacks/adanet.yaml --env-file ./stacks/env.yaml up drone
 
 glider-in-range:
-	@docker exec ${PROJECT}_ppp00_1 ip link set dev ppp0 up
+	@docker exec ${PROJECT}-ppp00-1 ip link set dev ppp0 up
 
 glider-out-of-range:
-	@docker exec ${PROJECT}_ppp00_1 ip link set dev ppp0 down
+	@docker exec ${PROJECT}-ppp00-1 ip link set dev ppp0 down

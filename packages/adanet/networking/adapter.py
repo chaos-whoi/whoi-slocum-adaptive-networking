@@ -75,6 +75,7 @@ class Adapter(Shuttable, IAdapter, ABC):
             self, AdapterBandwidthWorker.BandwidthDirection.OUT
         )
         self._ping_worker = AdapterPingWorker(self)
+        self._reconnect_worker = AdapterReconnectWorker(self)
         self._mailman_worker = AdapterMailman(self, self._pipe)
         # debug
         if DEBUG:
@@ -203,6 +204,7 @@ class Adapter(Shuttable, IAdapter, ABC):
         self._bandwidth_in_worker.start()
         self._bandwidth_out_worker.start()
         self._ping_worker.start()
+        self._reconnect_worker.start()
         self._mailman_worker.start()
         if DEBUG:
             self._debug_worker.start()
@@ -263,6 +265,22 @@ class Adapter(Shuttable, IAdapter, ABC):
             server_port = self._zeroconf_peer_srv.port
         # connect
         self._pipe.connect(str(server_ip), sub_port=server_port)
+
+    def reconnect(self):
+        # no network configuration => no connection
+        if self._remote is None and self._zeroconf_peer_srv is None:
+            return
+        # figure out server IP and port
+        if self._remote is not None:
+            # static network configuration
+            server_ip = self._remote
+            server_port = None
+        else:
+            # zeroconf network configuration
+            server_ip = self._zeroconf_peer_srv.addresses[0]
+            server_port = self._zeroconf_peer_srv.port
+        # reconnect
+        self._pipe.reconnect(str(server_ip), sub_port=server_port)
 
     @property
     def bandwidth_in(self) -> float:
@@ -486,22 +504,45 @@ class AdapterPingWorker(IAdapterWorker):
                 self._adapter.set_latency(latency / successes)
 
 
+class AdapterReconnectWorker(IAdapterWorker):
+
+    def __init__(self, adapter: Adapter, force_reconnect_after: float = 5):
+        super(AdapterReconnectWorker, self).__init__(
+            adapter,
+            frequency=1.0,
+        )
+        self._last_time_connected: float = Clock.time()
+        self._force_reconnect_after: float = force_reconnect_after
+
+    def _step(self):
+        # if it is connected, nothing to do
+        if self._adapter.is_connected:
+            self._last_time_connected: float = Clock.time()
+            return
+        # we know it is not connected, we are interested in cases in which ping is good
+        if self._adapter.has_ping:
+            time_since_last_connected: float = Clock.time() - self._last_time_connected
+            if time_since_last_connected > self._force_reconnect_after:
+                self._adapter.reconnect()
+                self._last_time_connected = Clock.time()
+
+
 class AdapterDebugger(IAdapterWorker):
 
     def __init__(self, adapter: Adapter):
-        super(AdapterDebugger, self).__init__(adapter, frequency=2.0)
+        super(AdapterDebugger, self).__init__(adapter, frequency=1)
 
     def _step(self):
         print(f"""
 Interface: {self._adapter.name}
-  IPv4 address:               {self._adapter.ip_address}
-  IPv4 network:               {self._adapter.ip_network}
-  Active:                     {self._adapter.is_active}
-  Link:                       {self._adapter.has_link}
-  Ping:                       {self._adapter.has_ping}
-  Connected:                  {self._adapter.is_connected}
-  Bandwidth IN (used):        {self._adapter.bandwidth_in:.0f} B/s
-  Bandwidth IN (estimated):   {self._adapter.estimated_bandwidth_in:.0f} B/s
-  Bandwidth OUT (used):       {self._adapter.bandwidth_out:.0f} B/s
-  Bandwidth OUT (estimated):  {self._adapter.estimated_bandwidth_out:.0f} B/s
+  IPv4 address:               {str(self._adapter.ip_address)}
+  IPv4 network:               {str(self._adapter.ip_network)}
+  Active:                     {str(self._adapter.is_active)}
+  Link:                       {str(self._adapter.has_link)}
+  Ping:                       {str(self._adapter.has_ping)}
+  Connected:                  {str(self._adapter.is_connected)}
+  Bandwidth IN (used):        {self._adapter.bandwidth_in or 0:.0f} B/s
+  Bandwidth IN (estimated):   {self._adapter.estimated_bandwidth_in or 0:.0f} B/s
+  Bandwidth OUT (used):       {self._adapter.bandwidth_out or 0:.0f} B/s
+  Bandwidth OUT (estimated):  {self._adapter.estimated_bandwidth_out or 0:.0f} B/s
 -----------------------------------------------""")

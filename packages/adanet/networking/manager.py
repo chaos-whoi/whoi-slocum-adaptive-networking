@@ -235,8 +235,8 @@ class NetworkManager(Shuttable, INetworkManager, Thread):
                               f"the problem definition, it will not be used.")
                         # mark this device as 'ignored'
                         self._ignored_links.add(device)
-                        # remove device from list
-                        del devices[device]
+                    # remove device from list
+                    del devices[device]
         # ---
         # noinspection PyTypeChecker
         return list(devices.items())

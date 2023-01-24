@@ -20,7 +20,7 @@ services:
     glider:
         image: docker.io/chaos-whoi/whoi-slocum-adaptive-networking:master-${GLIDER_ARCH:?ARCH_NOT_SET}
         environment:
-            DEBUG: 0
+            DEBUG: 1
             WANDB_OFFLINE: 0
             WANDB_PROJECT: ${WANDB_PROJECT:?WANDB_PROJECT_NOT_SET}
         volumes:
